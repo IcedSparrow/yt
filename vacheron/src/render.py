@@ -21,6 +21,7 @@ TF = {
     "semi": skia.Typeface.MakeFromFile("/usr/share/fonts/opentype/inter/Inter-SemiBold.otf"),
     "med": skia.Typeface.MakeFromFile("/usr/share/fonts/opentype/inter/Inter-Medium.otf"),
     "bold": skia.Typeface.MakeFromFile("/usr/share/fonts/opentype/inter/Inter-Bold.otf"),
+    "xb": skia.Typeface.MakeFromFile("/usr/share/fonts/opentype/inter/Inter-ExtraBold.otf"),
 }
 _fc = {}
 def font(k, s):
@@ -54,6 +55,10 @@ def text(c, s, x, y, f, paint, align="l", track=0):
 def clamp(v, a=0.0, b=1.0): return a if v < a else b if v > b else v
 def eio(t): t = clamp(t); return 4*t*t*t if t < .5 else 1 - (-2*t+2)**3/2
 def eout(t): t = clamp(t); return 1 - (1-t)**3
+def eback(t):
+    t = clamp(t); c1 = 1.70158; c3 = c1 + 1
+    return 1 + c3 * (t - 1) ** 3 + c1 * (t - 1) ** 2
+YEL = (255, 206, 84)
 def prog(t, t0, d, fn=eio): return fn((t - t0) / d) if d > 0 else (1.0 if t >= t0 else 0.0)
 def lerp(a, b, k): return a + (b - a) * k
 
@@ -76,7 +81,17 @@ def O(raw):
 CUTS = [CUM[i] / FPS for i in range(1, len(KEEP))]
 
 SFX = []  # (out_time, kind)
+TRANS = []; SHAKE = []
 def sfx(t, k): SFX.append((round(t, 3), k))
+def trans(t): sfx(t, "whoosh"); TRANS.append(t + 0.14)
+def shake(t, amp=10): SHAKE.append((t, amp))
+
+def shine(c, r, p):
+    if p <= 0 or p >= 1: return
+    x = lerp(r.left() - 260, r.right() + 260, p)
+    sh = skia.GradientShader.MakeLinear([skia.Point(x - 150, r.top()), skia.Point(x + 150, r.top() + 120)],
+                                        [skia.Color(255, 255, 255, 0), skia.Color(255, 255, 255, 80), skia.Color(255, 255, 255, 0)])
+    c.drawRect(r, skia.Paint(Shader=sh, BlendMode=skia.BlendMode.kPlus))
 
 # ---------------- images ----------------
 _img = {}
@@ -118,7 +133,7 @@ def draw_footage(c, bgr, m, z):
     cx, cy, r = CIRC
     # full rect (zoomed, anchored top-centre)
     fw, fh = W / z, H / z
-    S0 = ((W - fw) / 2, 0, fw, fh); D0 = (0, 0, W, H)
+    S0 = ((W - fw) / 2, 700 - 700 / z, fw, fh); D0 = (0, 0, W, H)
     S1 = (0, 244, 1080, 1080); D1 = (cx - r, cy - r, 2*r, 2*r)
     if m <= 0.001:
         img = skia.Image.fromarray(cv2.cvtColor(bgr, cv2.COLOR_BGR2RGBA), colorType=skia.kRGBA_8888_ColorType)
@@ -168,42 +183,46 @@ def kb_scale(t, t_in, t_out, amt=0.03):
     return 1 + amt * clamp((t - t_in) / max(0.1, (t_out - t_in + 0.3)))
 
 class Card(El):
-    """floating rounded card with an image (L2)"""
+    """floating rounded card with an image (L2) – pops in, light sweep"""
     z = 10
-    def __init__(s, name, crop, rect, t_in, t_out, kids=(), radius=26, fin=0.45, fout=0.3, rise=40, kb=0.03):
+    def __init__(s, name, crop, rect, t_in, t_out, kids=(), radius=26, fin=0.4, fout=0.25, rise=0, kb=0.06):
         super().__init__(t_in, t_out, fin, fout)
         s.name, s.crop, s.rect, s.kids, s.radius, s.rise, s.kb = name, crop, rect, kids, radius, rise, kb
+        if t_in > 0: sfx(t_in + 0.05, "pop")
     def geom(s, t):
         x, y, w, h = s.rect
         a, pin = win(t, s.t_in, s.t_out, s.fin, s.fout)
-        dy = (1 - pin) * s.rise
         sx, sy, sw, sh = cover_src(s.crop, w, h)
         k = kb_scale(t, s.t_in, s.t_out, s.kb)
-        # ken burns: shrink source around centre
         nsw, nsh = sw / k, sh / k
         src = (sx + (sw - nsw) / 2, sy + (sh - nsh) / 2, nsw, nsh)
-        return a, (x, y + dy, w, h), src
+        return a, (x, y, w, h), src
     def img2scr(s, t, px, py):
         a, (x, y, w, h), (sx, sy, sw, sh) = s.geom(t)
         return x + (px - sx) * w / sw, y + (py - sy) * h / sh
     def draw(s, c, t):
         a, (x, y, w, h), src = s.geom(t)
         if a <= 0: return
-        c.saveLayerAlpha(None, int(a * 255))
+        pp = clamp((t - s.t_in) / 0.38)
+        sc = lerp(0.8, 1.0, eback(pp)) if s.t_in > 0 else 1.0
+        c.saveLayerAlpha(None, int(clamp(a * 1.6 if t < s.t_out else a) * 255))
+        c.save(); c.translate(x + w / 2, y + h / 2); c.scale(sc, sc); c.translate(-(x + w / 2), -(y + h / 2))
         r = skia.Rect.MakeXYWH(x, y, w, h); rr = skia.RRect.MakeRectXY(r, s.radius, s.radius)
         sp = skia.Paint(AntiAlias=True, Color=col((0, 0, 0), 0.6), MaskFilter=skia.MaskFilter.MakeBlur(skia.kNormal_BlurStyle, 30))
         c.save(); c.translate(0, 24); c.drawRRect(rr, sp); c.restore()
         c.save(); c.clipRRect(rr, skia.ClipOp.kIntersect, True)
         c.drawImageRect(IMG(s.name), skia.Rect.MakeXYWH(*src), r, SMP, None, skia.Canvas.kStrict_SrcRectConstraint)
+        shine(c, r, prog(t, s.t_in + 0.3, 0.7, eio))
         c.restore()
         c.drawRRect(rr, P(CREAM, 0.16, 1.5))
+        c.restore()
         for k in s.kids: k.draw(c, t, s)
         c.restore()
 
 class Bleed(El):
     """edge-to-edge image at top fading into ink (L3)"""
     z = 10
-    def __init__(s, name, crop, t_in, t_out, kids=(), fin=0.35, fout=0.35, kb=0.035, y0=0):
+    def __init__(s, name, crop, t_in, t_out, kids=(), fin=0.3, fout=0.3, kb=0.07, y0=0):
         super().__init__(t_in, t_out, fin, fout)
         s.name, s.crop, s.kids, s.kb, s.y0 = name, crop, kids, kb, y0
         x0, y0_, x1, y1 = crop; s.hb = W * (y1 - y0_) / (x1 - x0)
@@ -262,13 +281,15 @@ class Strike:
 class Pill:
     """small tracked label pill placed in screen coords relative to parent card origin"""
     def __init__(s, txt, x, y, t0, d=0.35, fill=GOLD, fg=INK):
-        s.txt, s.x, s.y, s.t0, s.d, s.fill, s.fg = txt, x, y, t0, d, fill, fg; sfx(t0, "tick")
+        s.txt, s.x, s.y, s.t0, s.d, s.fill, s.fg = txt, x, y, t0, d, fill, fg; sfx(t0, "pop")
     def draw(s, c, t, parent=None):
         p = prog(t, s.t0, s.d, eout)
         if p <= 0: return
-        f = font("semi", 30); w = tw(s.txt, f, 3) + 44
-        y = s.y + (1 - p) * 14
+        f = font("xb", 32); w = tw(s.txt, f, 3) + 48
+        y = s.y
+        sc = lerp(0.3, 1.0, eback(clamp((t - s.t0) / 0.32)))
         c.saveLayerAlpha(None, int(p * 255))
+        c.translate(s.x + w / 2, y + 29); c.rotate(-4); c.scale(sc, sc); c.translate(-(s.x + w / 2), -(y + 29))
         c.drawRRect(skia.RRect.MakeRectXY(skia.Rect.MakeXYWH(s.x, y, w, 58), 29, 29), P(s.fill))
         text(c, s.txt, s.x + 22, y + 40, f, P(s.fg), track=3)
         c.restore()
@@ -295,19 +316,32 @@ class LowerThird(El):
         c.restore()
 
 class BigWord(El):
-    """me full frame, big word above head (L1)"""
+    """me full frame, big word above head (L1): slams in or counts up"""
     z = 30
-    def __init__(s, label, word, t_in, t_out):
-        super().__init__(t_in, t_out, 0.4, 0.22); s.label, s.word = label, word; sfx(t_in, "swoosh_s")
+    def __init__(s, label, word, t_in, t_out, count=False):
+        super().__init__(t_in, t_out, 0.2, 0.2); s.label, s.word, s.count = label, word, count
+        s.land = t_in + (0.45 if count else 0.2)
+        sfx(t_in, "swoosh_s"); sfx(s.land, "hit"); shake(s.land, 12)
     def draw(s, c, t):
         a, pin = win(t, s.t_in, s.t_out, s.fin, s.fout)
         if a <= 0: return
-        sh = skia.GradientShader.MakeLinear([skia.Point(0, 0), skia.Point(0, 420)], [col(INK, 0.62 * a), col(INK, 0)])
-        c.drawRect(skia.Rect.MakeLTRB(0, 0, W, 420), skia.Paint(Shader=sh))
-        dy = (1 - pin) * 26
+        sh = skia.GradientShader.MakeLinear([skia.Point(0, 0), skia.Point(0, 430)], [col(INK, 0.66 * a), col(INK, 0)])
+        c.drawRect(skia.Rect.MakeLTRB(0, 0, W, 430), skia.Paint(Shader=sh))
         c.saveLayerAlpha(None, int(a * 255))
-        text(c, s.label, W / 2, 168 + dy * 0.5, font("med", 26), P(GOLDL), "c", track=5)
-        text(c, s.word, W / 2, 292 + dy, font("serif", 132), P(CREAM), "c")
+        text(c, s.label, W / 2, 168, font("xb", 27), P(YEL), "c", track=5)
+        word = s.word; sc = 1.0
+        if s.count and t < s.land:
+            q = eout((t - s.t_in) / 0.45); v = int(round(lerp(int(word) - 90, int(word), q))); word = str(v)
+        elif s.count:
+            sc = 1 + 0.22 * (1 - eout((t - s.land) / 0.28))
+        else:
+            q = clamp((t - s.t_in) / 0.2); sc = lerp(1.9, 1.0, eout(q)) if q < 1 else 1 + 0.05 * (1 - eout((t - s.land) / 0.25))
+        c.save(); c.translate(W / 2, 250); c.scale(sc, sc)
+        f = font("serif", 136)
+        sp = skia.Paint(AntiAlias=True, Color=col((0, 0, 0), 0.55), MaskFilter=skia.MaskFilter.MakeBlur(skia.kNormal_BlurStyle, 10))
+        text(c, word, 0, 48, f, sp, "c")
+        text(c, word, 0, 42, f, P(CREAM), "c")
+        c.restore()
         c.restore()
 
 # ---------- captions ----------
@@ -346,23 +380,35 @@ for i, (r, s_, k) in enumerate(CAPS_RAW):
     t0 = O(r) - 1 / FPS
     t1 = O(CAPS_RAW[i + 1][0]) - 1 / FPS if i + 1 < len(CAPS_RAW) else NF / FPS + 1
     CAPS.append((max(0, t0), t1, s_, k))
-CAPF = font("semi", 54)
+CAPF = font("xb", 64)
 
 def draw_caption(c, t):
     for t0, t1, s_, keys in CAPS:
         if t0 <= t < t1:
-            p = 1.0 if t0 <= 0.001 else prog(t, t0, 0.12, eout)
-            words = s_.split(" "); sp = CAPF.measureText(" ")
-            ws = [CAPF.measureText(w_) for w_ in words]; tot = sum(ws) + sp * (len(words) - 1)
-            cx = 520; x = cx - tot / 2
-            m = CAPF.getMetrics(); capH = -m.fAscent * 0.72
-            by = CAP_Y + capH / 2 + (1 - p) * 6
-            c.saveLayerAlpha(None, int(255 * p))
-            c.drawRRect(skia.RRect.MakeRectXY(skia.Rect.MakeLTRB(x - 30, CAP_Y - 42, x + tot + 30, CAP_Y + 42), 22, 22), P(INK, 0.58))
-            for w_, ww in zip(words, ws):
-                c.drawString(w_, x, by, CAPF, P(GOLDL if w_ in keys else (255, 255, 255)))
-                x += ww + sp
-            c.restore()
+            q = 1.0 if t0 <= 0.001 else clamp((t - t0) / 0.17)
+            sc = lerp(0.72, 1.0, eback(q)); al = clamp(q * 3)
+            words = s_.split(" "); size = 64
+            f = font("xb", size)
+            tot = sum(f.measureText(w_) for w_ in words) + f.measureText(" ") * (len(words) - 1)
+            while tot > 880 and size > 44:
+                size -= 2; f = font("xb", size)
+                tot = sum(f.measureText(w_) for w_ in words) + f.measureText(" ") * (len(words) - 1)
+            sp = f.measureText(" ")
+            cx = 520; x0 = cx - tot / 2
+            by = CAP_Y + size * 0.36
+            c.save(); c.translate(cx, CAP_Y); c.scale(sc, sc); c.translate(-cx, -CAP_Y)
+            c.saveLayerAlpha(None, int(255 * al))
+            shp = skia.Paint(AntiAlias=True, Color=col((0, 0, 0), 0.6), MaskFilter=skia.MaskFilter.MakeBlur(skia.kNormal_BlurStyle, 9))
+            stp = P((0, 0, 0), 1, 12)
+            for pass_ in range(3):
+                x = x0
+                for w_ in words:
+                    ww = f.measureText(w_)
+                    if pass_ == 0: c.drawString(w_, x, by + 7, f, shp)
+                    elif pass_ == 1: c.drawString(w_, x, by, f, stp)
+                    else: c.drawString(w_, x, by, f, P(YEL if w_ in keys else (255, 255, 255)))
+                    x += ww + sp
+            c.restore(); c.restore()
             return
 
 # ---------- special graphics ----------
@@ -392,11 +438,14 @@ class Timeline(El):
         p = prog(t, e["end"], 0.35, eout)
         if p > 0:
             c.saveLayerAlpha(None, int(p * 255)); text(c, "2026", 960, 676 + (1 - p) * 14, font("serif", 84), P(CREAM), "r"); c.restore()
-        p = prog(t, e["big"], 0.45, eout)
+        p = prog(t, e["big"], 0.15, eout)
         if p > 0:
+            q = eout((t - e["big"]) / 0.7); v = int(round(271 * q))
+            sc = 1 + 0.2 * (1 - eout((t - e["big"] - 0.7) / 0.3)) if q >= 1 else 1.0
             c.saveLayerAlpha(None, int(p * 255))
-            text(c, "271 lat", W / 2, 470 + (1 - p) * 22, font("serif", 180), P(GOLDL), "c")
-            c.restore()
+            c.save(); c.translate(W / 2, 420); c.scale(sc, sc)
+            text(c, f"{v} lat", 0, 50, font("serif", 180), P(GOLDL), "c")
+            c.restore(); c.restore()
         ticks = [("t1789", 1789, 1789, 810, "1789", "REWOLUCJA"),
                  ("t1914", 1914, 1918, 810, "1914–1918", "I WOJNA"),
                  ("t1939", 1939, 1945, 930, "1939–1945", "II WOJNA")]
@@ -508,38 +557,123 @@ class MapFX:
 
 class BigThree(El):
     z = 10
-    def __init__(s, t_in, t_out, tc):
-        super().__init__(t_in, t_out, 0.4, 0.3); s.tc = tc
-        for x in tc: sfx(x, "tick")
+    def __init__(s, t_in, t_out, tc, t_hero):
+        super().__init__(t_in, t_out, 0.2, 0.3); s.tc, s.th = tc, t_hero
+        sfx(t_in, "riser_end"); sfx(t_in + 0.18, "hit"); shake(t_in + 0.18, 14)
+        for x in tc: sfx(x, "swoosh_s"); sfx(x + 0.3, "hit"); shake(x + 0.3, 11); sfx(x + 0.85, "tick")
+        sfx(t_hero, "pop"); shake(t_hero + 0.1, 6)
     def draw(s, c, t):
-        a, pin = win(t, s.t_in, s.t_out, s.fin, s.fout)
+        a, _ = win(t, s.t_in, s.t_out, s.fin, s.fout)
         if a <= 0: return
         c.saveLayerAlpha(None, int(a * 255))
-        dy = (1 - pin) * 20
-        text(c, "SZWAJCARSKIE ZEGARMISTRZOSTWO", W / 2, 250 + dy, font("med", 25), P(GOLD), "c", track=5)
-        text(c, "Wielka Trójka", W / 2, 370 + dy, font("serif", 120), P(CREAM), "c")
-        rows = [("I", "Vacheron Constantin", "GENÈVE · OD 1755", True),
-                ("II", "Patek Philippe", "GENÈVE · OD 1839", False),
-                ("III", "Audemars Piguet", "LE BRASSUS · OD 1875", False)]
-        for i, ((num, name, sub, hero), t0) in enumerate(zip(rows, s.tc)):
-            p = prog(t, t0, 0.45, eout)
-            if p <= 0: continue
-            y = 450 + i * 196; x = 110 + (1 - p) * 70
-            c.saveLayerAlpha(None, int(p * 255))
-            rr = skia.RRect.MakeRectXY(skia.Rect.MakeXYWH(x, y, 860, 168), 22, 22)
-            c.drawRRect(rr, P(PANEL)); c.drawRRect(rr, P(GOLD if hero else CREAM, 0.9 if hero else 0.16, 2 if hero else 1.5))
-            text(c, num, x + 78, y + 106, font("serif", 64), P(GOLD), "c")
-            c.drawLine(x + 150, y + 36, x + 150, y + 132, P(CREAM, 0.15, 1.5))
-            text(c, name, x + 186, y + 92, font("serif", 58), P(CREAM))
-            text(c, sub, x + 188, y + 134, font("med", 22), P(MUTED), track=4)
+        # rotating light rays
+        ra = prog(t, s.t_in, 0.6, eout)
+        c.save(); c.translate(540, 740); c.rotate((t - s.t_in) * 9)
+        rp = P(GOLD, 0.07 * ra)
+        for i in range(16):
+            th = math.radians(i * 22.5); dth = math.radians(5.5)
+            pth = skia.Path(); pth.moveTo(0, 0)
+            pth.lineTo(1300 * math.cos(th - dth), 1300 * math.sin(th - dth)); pth.lineTo(1300 * math.cos(th + dth), 1300 * math.sin(th + dth)); pth.close()
+            c.drawPath(pth, rp)
+        c.restore()
+        vg = skia.GradientShader.MakeRadial(skia.Point(540, 740), 760, [col(INK, 0), col(INK, 0.9)])
+        c.drawRect(skia.Rect.MakeWH(W, 1100), skia.Paint(Shader=vg))
+        # title slam
+        q = clamp((t - s.t_in) / 0.2); sc = lerp(2.0, 1.0, eout(q)) if q < 1 else 1 + 0.06 * (1 - eout((t - s.t_in - 0.2) / 0.3))
+        text(c, "SZWAJCARSKIE ZEGARMISTRZOSTWO", W / 2, 228, font("xb", 26), P(YEL, clamp(q * 2)), "c", track=5)
+        c.save(); c.translate(W / 2, 320); c.scale(sc, sc)
+        c.saveLayerAlpha(None, int(clamp(q * 2) * 255))
+        text(c, "Wielka Trójka", 0, 44, font("serif", 128), P(CREAM), "c")
+        c.restore(); c.restore()
+        cards = [("I", "Vacheron", "Constantin", 1755, "GENÈVE", True),
+                 ("II", "Patek", "Philippe", 1839, "GENÈVE", False),
+                 ("III", "Audemars", "Piguet", 1875, "LE BRASSUS", False)]
+        cw, ch, y0 = 316, 560, 455
+        for i, ((num, n1, n2, yr, city, hero), t0) in enumerate(zip(cards, s.tc)):
+            pl = clamp((t - t0) / 0.4)
+            if pl <= 0: continue
+            x = 32 + i * 342
+            yoff = -760 * (1 - eback(pl))
+            land = t - t0 - 0.3
+            sq = 1 - 0.05 * (1 - eout(land / 0.18)) if 0 <= land < 0.18 else 1.0
+            c.save(); c.translate(x + cw / 2, y0 + ch + yoff); c.scale(1 / sq if sq < 1 else 1, sq); c.translate(-(x + cw / 2), -(y0 + ch))
+            c.translate(0, yoff)
+            c.saveLayerAlpha(None, int(clamp(pl * 4) * 255))
+            r = skia.Rect.MakeXYWH(x, y0, cw, ch); rr = skia.RRect.MakeRectXY(r, 26, 26)
+            sp = skia.Paint(AntiAlias=True, Color=col((0, 0, 0), 0.7), MaskFilter=skia.MaskFilter.MakeBlur(skia.kNormal_BlurStyle, 28))
+            c.save(); c.translate(0, 26); c.drawRRect(rr, sp); c.restore()
+            g = skia.GradientShader.MakeLinear([skia.Point(0, y0), skia.Point(0, y0 + ch)], [col((44, 38, 31)), col((17, 15, 13))])
+            c.drawRRect(rr, skia.Paint(AntiAlias=True, Shader=g))
+            c.save(); c.clipRRect(rr, skia.ClipOp.kIntersect, True)
+            shine(c, r, prog(t, t0 + 0.45, 0.6, eio))
             c.restore()
+            c.drawRRect(rr, P(GOLD if hero else CREAM, 1 if hero else 0.22, 3 if hero else 1.5))
+            cx = x + cw / 2
+            text(c, num, cx, y0 + 100, font("serif", 74), P(GOLD), "c")
+            c.drawLine(cx - 50, y0 + 128, cx + 50, y0 + 128, P(GOLD, 0.6, 2))
+            text(c, n1, cx, y0 + 212, font("serif", 54), P(CREAM), "c")
+            text(c, n2, cx, y0 + 266, font("serif", 54), P(CREAM), "c")
+            text(c, "OD ROKU", cx, y0 + 352, font("xb", 22), P(MUTED), "c", track=4)
+            cq = eout((t - t0 - 0.3) / 0.55); v = int(round(lerp(yr - 150, yr, cq)))
+            text(c, str(v), cx, y0 + 436, font("xb", 74), P(YEL), "c")
+            text(c, city, cx, y0 + 500, font("med", 22), P(MUTED), "c", track=4)
+            c.restore(); c.restore()
+        hp = clamp((t - s.th) / 0.35)
+        if hp > 0:
+            x = 32; sc = lerp(0.2, 1, eback(hp))
+            pulse = 0.5 + 0.5 * math.sin((t - s.th) * 6)
+            rr = skia.RRect.MakeRectXY(skia.Rect.MakeXYWH(x - 6, y0 - 6, cw + 12, ch + 12), 30, 30)
+            c.drawRRect(rr, P(YEL, 0.35 + 0.4 * pulse, 4))
+            c.save(); c.translate(x + cw / 2, y0); c.rotate(-5); c.scale(sc, sc)
+            f = font("xb", 30); w = tw("NAJSTARSZA", f, 3) + 50
+            c.drawRRect(skia.RRect.MakeRectXY(skia.Rect.MakeXYWH(-w / 2, -30, w, 60), 30, 30), P(YEL))
+            text(c, "NAJSTARSZA", 0, 11, f, P(INK), "c", track=3)
+            c.restore()
+        c.restore()
+
+class Picks(El):
+    """end: my two favourites"""
+    z = 10
+    def __init__(s, t_in, t_out, ta, tb):
+        super().__init__(t_in, t_out, 0.2, 0.25); s.ta, s.tb = ta, tb
+        for x in (ta, tb): sfx(x, "swoosh_s"); sfx(x + 0.25, "hit"); shake(x + 0.25, 10)
+    def draw(s, c, t):
+        a, _ = win(t, s.t_in, s.t_out, s.fin, s.fout)
+        if a <= 0: return
+        c.saveLayerAlpha(None, int(a * 255))
+        hp = prog(t, s.ta, 0.3, eout)
+        text(c, "MOJE FAWORYTY", W / 2, 352, font("xb", 28), P(YEL, hp), "c", track=6)
+        items = [("a4676376-image.jpg", (0, 0, 961, 1357), "VACHERON CONSTANTIN", "Overseas", 100, -3.5, s.ta),
+                 ("708f5a33-image.webp", (0, 0, 768, 960), "HISTORIQUES", "American 1921", 570, 3.5, s.tb)]
+        cw, ch, y0 = 410, 560, 400
+        for name, crop, l1, l2, x, rot, t0 in items:
+            pl = clamp((t - t0) / 0.38)
+            if pl <= 0: continue
+            sc = lerp(0.4, 1, eback(pl))
+            c.save(); c.translate(x + cw / 2, y0 + ch / 2); c.rotate(rot * eout(pl)); c.scale(sc, sc); c.translate(-(x + cw / 2), -(y0 + ch / 2))
+            c.saveLayerAlpha(None, int(clamp(pl * 4) * 255))
+            r = skia.Rect.MakeXYWH(x, y0, cw, ch); rr = skia.RRect.MakeRectXY(r, 24, 24)
+            sp = skia.Paint(AntiAlias=True, Color=col((0, 0, 0), 0.65), MaskFilter=skia.MaskFilter.MakeBlur(skia.kNormal_BlurStyle, 26))
+            c.save(); c.translate(0, 22); c.drawRRect(rr, sp); c.restore()
+            c.save(); c.clipRRect(rr, skia.ClipOp.kIntersect, True)
+            k = 1 + 0.05 * clamp((t - t0) / 3)
+            sx, sy, sw, sh_ = cover_src(crop, cw, ch); nsw, nsh = sw / k, sh_ / k
+            c.drawImageRect(IMG(name), skia.Rect.MakeXYWH(sx + (sw - nsw) / 2, sy + (sh_ - nsh) / 2, nsw, nsh), r, SMP, None, skia.Canvas.kStrict_SrcRectConstraint)
+            g = skia.GradientShader.MakeLinear([skia.Point(0, y0 + ch - 220), skia.Point(0, y0 + ch)], [col(INK, 0), col(INK, 0.94)])
+            c.drawRect(r, skia.Paint(Shader=g))
+            shine(c, r, prog(t, t0 + 0.4, 0.6, eio))
+            text(c, l1, x + 28, y0 + ch - 86, font("xb", 21), P(YEL), track=3.5)
+            text(c, l2, x + 26, y0 + ch - 32, font("serif", 50), P(CREAM))
+            c.restore()
+            c.drawRRect(rr, P(GOLD, 0.8, 2))
+            c.restore(); c.restore()
         c.restore()
 
 class Fan(El):
     z = 10
     def __init__(s, names, t_in, t_out, tdeal):
         super().__init__(t_in, t_out, 0.4, 0.25); s.names, s.td = names, tdeal
-        for x in tdeal: sfx(x, "tick")
+        for x in tdeal: sfx(x, "swoosh_s"); sfx(x + 0.3, "pop"); shake(x + 0.3, 5)
     def draw(s, c, t):
         a, _ = win(t, s.t_in, s.t_out, 0.01, s.fout)
         if a <= 0: return
@@ -550,7 +684,7 @@ class Fan(El):
             if p <= 0: continue
             w_, h_ = 440, 550
             c.save(); c.saveLayerAlpha(None, int(p * 255))
-            c.translate(cx, cy + (1 - p) * 90); c.rotate(rot * p)
+            pb = eback(clamp((t - t0) / 0.42)); c.translate(cx, cy + (1 - pb) * 260); c.rotate(rot * pb - (1 - pb) * 12)
             r = skia.Rect.MakeXYWH(-w_ / 2, -h_ / 2, w_, h_); rr = skia.RRect.MakeRectXY(r, 22, 22)
             sp = skia.Paint(AntiAlias=True, Color=col((0, 0, 0), 0.6), MaskFilter=skia.MaskFilter.MakeBlur(skia.kNormal_BlurStyle, 26))
             c.save(); c.translate(0, 20); c.drawRRect(rr, sp); c.restore()
@@ -706,100 +840,126 @@ class Title(El):
 
 # =================== TIMELINE ===================
 def build(hook="A"):
-    global SFX
-    SFX = []
+    global SFX, TRANS, SHAKE
+    SFX = []; TRANS = []; SHAKE = []
     E = []
     # ---- footage mode keys (m: 0 full, 1 circle) ----
-    Mk = [(O(9.10), O(9.10) + 0.45, 1, 0), (O(11.90), O(11.90) + 0.45, 0, 1),
-          (O(30.50), O(30.50) + 0.45, 1, 0), (O(32.95), O(32.95) + 0.45, 0, 1),
-          (O(56.22), O(56.22) + 0.45, 1, 0), (O(60.80), O(60.80) + 0.45, 0, 1)]
-    for t0, t1, a, b in Mk: sfx(t0, "swoosh")
-    Zk = [(O(10.95), O(10.95) + 0.6, 1.0, 1.06), (O(12.40), O(12.40) + 0.01, 1.06, 1.0),
-          (O(57.70), O(57.70) + 0.001, 1.0, 1.07), (O(61.30), O(61.30) + 0.01, 1.07, 1.0)]
+    Mk = [(O(9.10), O(9.10) + 0.4, 1, 0), (O(11.90), O(11.90) + 0.4, 0, 1),
+          (O(30.50), O(30.50) + 0.4, 1, 0), (O(32.95), O(32.95) + 0.4, 0, 1),
+          (O(56.22), O(56.22) + 0.4, 1, 0), (O(58.62), O(58.62) + 0.4, 0, 1)]
+    for t0, t1, a, b in Mk: trans(t0)
+    # hard zoom jumps on key words (full-frame segments only), reset after the morph out
+    def Z(t, a, b): return (t, t + 0.001, a, b)
+    Zk = [Z(O(9.84), 1.0, 1.05), Z(O(11.02), 1.05, 1.10), Z(O(11.90) + 0.45, 1.10, 1.0),
+          Z(O(31.04), 1.0, 1.05), Z(O(31.86), 1.05, 1.10), Z(O(32.95) + 0.45, 1.10, 1.0),
+          Z(O(56.98), 1.0, 1.05), Z(O(57.70), 1.05, 1.10), Z(O(58.62) + 0.45, 1.10, 1.0)]
+    for z_ in (O(9.84), O(11.02), O(31.04), O(56.98), O(57.70)): sfx(z_, "swoosh_s")
     # ---- HOOK ----
     T_H = O(2.92)
     if hook == "A":
-        E.append(Bleed("4b841112-image.jpg", (0, 0, 1280, 1600), -1, T_H, fin=0.01))
+        E.append(Bleed("4b841112-image.jpg", (0, 0, 1280, 1600), -1, T_H, fin=0.01, kb=0.08))
         E.append(Title("VACHERON CONSTANTIN · OD 1755", ["Najstarsza marka", "zegarków na świecie"], 196, T_H - 0.25, O(1.30), size=94))
     elif hook == "B":
-        E.append(Card("6f6bfa21-image.jpg", (0, 0, 1280, 1280), (230, 470, 620, 620), -1, T_H, fin=0.01, kb=0.04))
+        E.append(Card("6f6bfa21-image.jpg", (0, 0, 1280, 1280), (230, 470, 620, 620), -1, T_H, fin=0.01, kb=0.08))
         E.append(Title("VACHERON CONSTANTIN · OD 1755", ["Starsza niż", "Stany Zjednoczone"], 196, T_H - 0.25, O(1.30), size=94))
     else:
-        E.append(Card("bd6f2976-image.jpg", (0, 0, 1280, 1600), (306, 488, 468, 585), -1, T_H, fin=0.01, kb=0.04))
+        E.append(Card("bd6f2976-image.jpg", (0, 0, 1280, 1600), (306, 488, 468, 585), -1, T_H, fin=0.01, kb=0.08))
         E.append(Title("NAJSTARSZA MANUFAKTURA ŚWIATA", ["271 lat", "bez przerwy"], 196, T_H - 0.25, O(1.30), size=104))
+    E.append(PillEl("GENÈVE · 1755", 580, 1150, O(0.75), T_H))
     # ---- 2: workshop card ----
-    sfx(O(2.85), "swoosh")
+    trans(O(2.85))
     t_out2 = O(4.30)
-    E.append(Card("a1bcdbaf-image.jpg", (0, 560, 1280, 2160), (168, 150, 744, 930), O(2.85), t_out2, fin=0.45))
+    E.append(Card("a1bcdbaf-image.jpg", (0, 560, 1280, 2160), (168, 150, 744, 930), O(2.85), t_out2))
     E.append(LowerThird("PIERWSZY WARSZTAT", "Genewa", O(3.55), t_out2))
     # ---- 3: archive 1755 bleed ----
-    sfx(O(4.30), "swoosh_s")
+    trans(O(4.30))
     t_out3 = O(6.00)
     E.append(Bleed("6ea7afd9-image.jpg", (0, 0, 1280, 1340), O(4.30), t_out3,
-                   kids=[Outline((258, 302, 442, 343), O(4.62), 0.5)]))
+                   kids=[Outline((258, 302, 442, 343), O(4.62), 0.45)]))
     E.append(LowerThird("ARCHIWUM GENEWY", "17 września 1755", O(5.20), t_out3))
     # ---- 3b: Jean-Marc portrait ----
-    sfx(O(6.00), "swoosh_s")
+    trans(O(6.00))
     t_out3b = O(8.95)
-    E.append(Card("9163fee0-image.jpg", (0, 0, 640, 640), (130, 190, 820, 820), O(5.98), t_out3b, fin=0.4,
+    E.append(Card("9163fee0-image.jpg", (0, 0, 640, 640), (130, 190, 820, 820), O(5.98), t_out3b,
                   kids=[Pill("24 LATA", 160, 220, O(7.95))]))
     E.append(LowerThird("ZAŁOŻYCIEL", "Jean-Marc Vacheron", O(6.38), t_out3b, fout=0.2))
+    shake(O(7.95) + 0.25, 6)
     # ---- 4: full frame "Najstarsza" ----
     E.append(BigWord("MARKA ZEGARKÓW", "Najstarsza", O(10.40), O(11.70)))
     # ---- 5: timeline ----
-    ev = dict(lbl=O(12.38), line=O(12.70), end=O(13.72), big=O(14.15), t1789=O(15.98), t1914=O(17.12), t1939=O(17.52))
-    for k_ in ("lbl", "end", "big", "t1789", "t1914", "t1939"): sfx(ev[k_], "tick")
-    sfx(ev["line"], "swoosh_s")
+    ev = dict(lbl=O(12.38), line=O(12.70), end=O(13.72), big=O(13.95), t1789=O(15.98), t1914=O(17.12), t1939=O(17.52))
+    for k_ in ("lbl", "end", "t1789", "t1914", "t1939"): sfx(ev[k_], "pop")
+    for k_ in ("t1789", "t1914", "t1939"): shake(ev[k_] + 0.1, 6)
+    sfx(ev["line"], "swoosh_s"); sfx(ev["big"] + 0.7, "hit"); shake(ev["big"] + 0.7, 12)
     E.append(Timeline(O(12.36), O(18.10), ev))
     # ---- 6: vintage watch card ----
-    sfx(O(18.10), "swoosh_s")
-    E.append(Card("c75a7c85-image.jpg", (0, 0, 1280, 1600), (168, 150, 744, 930), O(18.12), O(20.15)))
+    trans(O(18.10))
+    E.append(Card("c75a7c85-image.jpg", (0, 0, 1280, 1600), (168, 150, 744, 930), O(18.12), O(20.15),
+                  kids=[Pill("BEZ PRZERWY", 198, 182, O(18.75))]))
     # ---- 7: Chossat bleed ----
-    sfx(O(20.15), "swoosh_s")
+    trans(O(20.15))
     t7 = O(23.30)
     E.append(Bleed("e52abe31-image.jpg", (0, 0, 1280, 1280), O(20.15), t7,
-                   kids=[Outline((668, 897, 932, 949), O(20.62), 0.5, radius=12)]))
+                   kids=[Outline((668, 897, 932, 949), O(20.62), 0.45, radius=12)]))
     E.append(LowerThird("DAWNA NAZWA", "Vacheron Chossat", O(21.20), t7, strike=("Chossat", O(21.75))))
+    shake(O(21.75) + 0.3, 7)
     # ---- 8: Constantin duo ----
-    sfx(O(23.30), "swoosh_s")
+    trans(O(23.30))
     E.append(Duo(O(23.30), O(27.10), O(23.62), O(26.05)))
+    shake(O(23.62) + 0.4, 6); shake(O(26.05) + 0.4, 8); sfx(O(26.05) + 0.35, "hit")
     # ---- 9: building, name on the facade ----
-    sfx(O(27.10), "swoosh_s")
+    trans(O(27.10))
     E.append(Bleed("4b841112-image.jpg", (180, 500, 1280, 1600), O(27.10), O(30.36),
                    kids=[Outline((226, 1128, 336, 1218), O(27.55), 0.45, radius=8),
                          Outline(None, O(28.12), 0.5, quad=[(470, 1104), (1290, 1160)], w=4)]))
+    sfx(O(28.62), "hit"); shake(O(28.62), 9)
     # ---- 10: full frame 1839 ----
-    E.append(BigWord("KOLEJNY PRZEŁOM", "1839", O(31.20), O(32.72)))
+    E.append(BigWord("KOLEJNY PRZEŁOM", "1839", O(31.05), O(32.72), count=True))
     # ---- 11: Leschot ----
-    E.append(Card("9163fee0-image.jpg", (640, 0, 1280, 640), (130, 190, 820, 820), O(33.36), O(35.20), fin=0.4))
+    E.append(Card("9163fee0-image.jpg", (640, 0, 1280, 640), (130, 190, 820, 820), O(33.36), O(35.20)))
     E.append(LowerThird("INŻYNIER · 1839", "Georges-Auguste Leschot", O(33.80), O(35.20)))
     # ---- 12: pantograph ----
-    sfx(O(35.22), "swoosh_s")
+    trans(O(35.22))
     E.append(Pantograph(O(35.22), O(39.85), O(36.0), O(39.45)))
+    sfx(O(39.45), "pop"); shake(O(39.45), 6)
     # ---- 13: production card ----
-    sfx(O(39.85), "swoosh_s")
-    E.append(Card("a4c89abc-image.jpg", (0, 0, 1280, 1280), (130, 190, 820, 820), O(39.85), O(41.72)))
+    trans(O(39.85))
+    E.append(Card("a4c89abc-image.jpg", (0, 0, 1280, 1280), (130, 190, 820, 820), O(39.85), O(41.72),
+                  kids=[Pill("REWOLUCJA", 160, 220, O(40.50))]))
     # ---- 14: map ----
-    sfx(O(41.72), "swoosh_s")
-    E.append(Bleed("04cb4576-image.jpg", (0, 40, 1280, 1400), O(41.72), O(45.45), kb=0.05,
+    trans(O(41.72))
+    E.append(Bleed("04cb4576-image.jpg", (0, 40, 1280, 1400), O(41.72), O(45.45), kb=0.09,
                    kids=[MapFX((258, 724), O(42.25), [((880, 300), O(42.85)), ((990, 760), O(43.30)), ((760, 1130), O(43.75))])]))
     # ---- 15: today ----
-    sfx(O(45.45), "swoosh_s")
-    E.append(Card("f7e61e8c-image.jpg", (0, 0, 1280, 1600), (168, 150, 744, 930), O(45.45), O(47.52)))
-    E.append(LowerThird("DZIŚ · PLAN-LES-OUATES", "Manufaktura w Genewie", O(46.00), O(47.52)))
+    trans(O(45.45))
+    E.append(Card("f7e61e8c-image.jpg", (0, 0, 1280, 1600), (168, 150, 744, 930), O(45.45), O(47.52),
+                  kids=[Pill("DZIŚ", 198, 182, O(45.85))]))
+    E.append(LowerThird("PLAN-LES-OUATES · GENEWA", "Manufaktura dziś", O(46.05), O(47.52)))
     # ---- 16: big three ----
-    sfx(O(47.52), "swoosh_s")
-    E.append(BigThree(O(47.52), O(53.45), [O(48.80), O(50.62), O(51.42)]))
+    trans(O(47.40))
+    E.append(BigThree(O(47.52), O(53.45), [O(48.62), O(50.52), O(51.34)], O(52.15)))
     # ---- 17: fan ----
+    trans(O(53.45))
     E.append(Fan(["7c3ff056-image.jpg", "78bddd74-image.jpg", "1c499380-image.jpg"], O(53.62), O(56.05),
                  [O(53.95), O(54.35), O(54.75)]))
-    # ---- 18: comment ----
-    E.append(Comment(O(56.68), O(60.60), [(O(58.55), O(58.95), "Overseas"), (O(59.55), O(60.10), " i Historiques American")]))
+    # ---- 18: comment + my picks ----
+    E.append(Comment(O(56.68), O(61.10), [(O(58.55), O(58.95), "Overseas"), (O(59.55), O(60.10), " i Historiques American")]))
+    E.append(Picks(O(58.80), O(61.10), O(58.84), O(59.74)))
     # ---- 19: CTA ----
-    sfx(O(61.25), "swoosh_s")
+    trans(O(61.15))
     E.append(CTA(O(61.25), NF / FPS + 1, O(62.42)))
+    shake(O(62.42) + 0.05, 14)
     E.sort(key=lambda e: e.z)
     return E, Mk, Zk
+
+class PillEl(El):
+    z = 30
+    def __init__(s, txt, x, y, t_in, t_out):
+        super().__init__(t_in, t_out, 0.3, 0.2); s.p = Pill(txt, x, y, t_in)
+    def draw(s, c, t):
+        a, _ = win(t, s.t_in, s.t_out, s.fin, s.fout)
+        if a <= 0: return
+        c.saveLayerAlpha(None, int(a * 255)); s.p.draw(c, t); c.restore()
 
 # =================== RENDER ===================
 def render_frame(c, fi, E, Mk, Zk, cache=None):
@@ -823,6 +983,26 @@ def render_frame(c, fi, E, Mk, Zk, cache=None):
         if e.z >= 30 and e.alive(t): e.draw(c, t)
     draw_caption(c, t)
 
+def post(a, t):
+    k = 1.0; blur = 0.0
+    for T in TRANS:
+        d = abs(t - T)
+        if d < 0.16: v = (1 - d / 0.16) ** 2; k = max(k, 1 + 0.08 * v); blur = max(blur, v)
+    dx = dy = 0.0
+    for T, amp in SHAKE:
+        d = t - T
+        if 0 <= d < 0.32:
+            e = (1 - d / 0.32) ** 2; dx += amp * e * math.sin(2 * math.pi * 24 * d); dy += amp * 0.7 * e * math.cos(2 * math.pi * 19 * d)
+    if k == 1.0 and dx == 0 and dy == 0: return a
+    sc = k + (abs(dx) + abs(dy)) / 450
+    def warp(z_):
+        M = np.float32([[z_, 0, (1 - z_) * W / 2 + dx], [0, z_, (1 - z_) * H / 2 + dy]])
+        return cv2.warpAffine(a, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    if blur > 0.08:
+        o = warp(sc).astype(np.float32) * 0.4 + warp(sc * (1 + 0.025 * blur)).astype(np.float32) * 0.3 + warp(sc * (1 + 0.05 * blur)).astype(np.float32) * 0.3
+        return o.astype(np.uint8)
+    return warp(sc)
+
 def worker(args):
     hook, f0, f1, out = args
     E, Mk, Zk = build(hook)
@@ -833,7 +1013,7 @@ def worker(args):
     pr = subprocess.Popen(cmd, stdin=subprocess.PIPE)
     for fi in range(f0, f1):
         render_frame(c, fi, E, Mk, Zk)
-        pr.stdin.write(surf.makeImageSnapshot().toarray().tobytes())
+        pr.stdin.write(np.ascontiguousarray(post(surf.makeImageSnapshot().toarray(), fi / FPS)).tobytes())
     pr.stdin.close(); pr.wait()
     return out
 
@@ -841,7 +1021,7 @@ def still(hook, t, path):
     E, Mk, Zk = build(hook)
     surf = skia.Surface(W, H); c = surf.getCanvas()
     render_frame(c, min(NF - 1, int(round(t * FPS))), E, Mk, Zk)
-    a = surf.makeImageSnapshot().toarray()
+    a = post(surf.makeImageSnapshot().toarray(), min(NF - 1, int(round(t * FPS))) / FPS)
     cv2.imwrite(path, a[..., :3])
 
 if __name__ == "__main__":

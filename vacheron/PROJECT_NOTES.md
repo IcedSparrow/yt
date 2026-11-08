@@ -59,5 +59,25 @@ Pełna tabela napisów i lista cięć: `cut_and_cue.md`.
 - **Przegląd 1 (klatki):** ramka „1755” była przesunięta w lewo; podpis w archiwum leżał na jasnym tle (słaba czytelność); ramię pantografu wchodziło na tytuł; oś czasu była zbyt mała i miała pustą połowę; ptaszek „Obserwujesz” nachodził na tekst. Wszystko poprawione.
 - **Przegląd 2 (przejścia i audio):** sprawdzone morphy i każde cięcie audio (brak trzasków, maks. skok na cięciu ok. 5% skali); przejście jasnych zdjęć w ciemne tło wydłużone z 300 do 400 px; w hooku C karta dotykała tytułu, przesunięta niżej.
 
+## Runda 2: dynamiczny montaż (styl MrBeast)
+Twoja prośba: dodać Overseas i Historiques American 1921 na końcu, więcej animacji, dynamiczny montaż, przebudowana Wielka Trójka.
+
+**Nowe pliki:** `VC_reel_v2_DYNAMIC_glos_sfx.mp4` (główna wersja) i `VC_reel_v2_DYNAMIC_tylko_glos.mp4`. Hooki w `hooks/` przerenderowane w nowym stylu. Runda 1 jest w `runda1/`.
+
+**Co się zmieniło**
+- Napisy: Inter ExtraBold 64 px, biały tekst z czarnym konturem i cieniem, słowo kluczowe na żółto-złoto (#FFCE54), każdy napis wskakuje z lekkim przeskokiem (pop).
+- Przejścia: każda zmiana układu ma zoom-blur i whoosh (19 przejść).
+- Przybliżenia na twarz: skokowe 1,00 → 1,05 → 1,10 na kluczowych słowach (zakotwiczone tak, żeby usta nie wchodziły na napisy).
+- Wstrząsy kamery przy każdym mocnym akcencie (duże słowa, karty, liczniki), 27 razy.
+- Duże słowa: „Najstarsza” wpada z dużej skali, „1839” odlicza się od 1749 i ląduje z uderzeniem.
+- Oś czasu: „271 lat” odlicza się od 0, znaczniki 1789 / 1914–1918 / 1939–1945 z akcentem.
+- Karty zdjęć wskakują z przeskokiem, mają przesuwający się refleks światła i mocniejszy Ken Burns.
+- Naklejki (pills): GENÈVE · 1755, 24 LATA, BEZ PRZERWY, REWOLUCJA, DZIŚ, przechylone i wskakujące.
+- **Wielka Trójka (nowa):** obracające się złote promienie w tle, tytuł wpada z 2× skali z wstrząsem, przed nim riser. Trzy wysokie karty spadają z góry z odbiciem i lekkim zgnieceniem przy lądowaniu. Na każdej karcie odlicza się licznik lat (1755 / 1839 / 1875). Na końcu na karcie Vacheron Constantin pojawia się pulsująca złota ramka i naklejka „NAJSTARSZA”.
+- **Koniec:** przy „Overseas” i „Historiques American” wskakują dwie karty z Twoimi zdjęciami („MOJE FAWORYTY”), a nad nimi w polu komentarza wpisuje się tekst. Potem CTA z kliknięciem i mocnym wstrząsem.
+- Dźwięk: 94 efekty (whoosh, pop, hit, riser, kliknięcia), ok. 14 dB pod głosem; całość -13,2 LUFS.
+
+**Odstępstwa od pierwotnych zasad (na Twoją prośbę o styl MrBeast):** kilka ruchów naraz, przeskoki (overshoot), wstrząsy i częstsze przybliżenia. Bez zmian zostało: brak wycinania postaci, naturalna twarz bez filtrów, napisy nigdy na zdjęciach ani na ustach, nic w dolnych 20%.
+
 ## Status
-Runda 1 wyrenderowana, czeka na uwagi.
+Runda 2 wyrenderowana, czeka na uwagi.

@@ -42,11 +42,24 @@ def typ():
     for i in range(7):
         o=int(i*0.075*SR+rng.integers(0,300)); c=click()*0.6; x[o:o+len(c)]+=c[:n-o]
     return x
-lib={"swoosh":swoosh(0.55),"swoosh_s":swoosh(0.42,700,4500),"tick":tick(),"click":click(),"hit":hit(),"type":typ()}
-gain={"swoosh":0.10,"swoosh_s":0.06,"tick":0.07,"click":0.10,"hit":0.30,"type":0.05}
+def pop():
+    n=int(0.09*SR); t=np.arange(n)/SR; f=950*np.exp(-t/0.03)+260
+    x=np.sin(2*np.pi*np.cumsum(f)/SR)*env(n,0.001,0.03); return x/np.max(np.abs(x))
+def riser(d=1.1):
+    n=int(d*SR); x=rng.standard_normal(n); t=np.linspace(0,1,n); out=np.zeros(n); k=12
+    for i in range(k):
+        sl=slice(i*n//k,(i+1)*n//k); c=300*(6000/300)**(i/k); out[sl]=bp(x,c*0.7,c*1.4)[sl]
+    out*=t**2.2; return out/np.max(np.abs(out))
+def hit2():
+    n=int(0.7*SR); t=np.arange(n)/SR; f=48+90*np.exp(-t/0.04)
+    x=np.sin(2*np.pi*np.cumsum(f)/SR)*env(n,0.002,0.18)+0.45*bp(rng.standard_normal(n),80,2500)*env(n,0.0005,0.03)
+    return x/np.max(np.abs(x))
+lib={"whoosh":swoosh(0.5,300,5000),"pop":pop(),"riser_end":riser(),"swoosh":swoosh(0.55),"swoosh_s":swoosh(0.42,700,4500),"tick":tick(),"click":click(),"hit":hit2(),"type":typ()}
+gain={"whoosh":0.20,"swoosh":0.14,"swoosh_s":0.10,"tick":0.09,"click":0.12,"hit":0.34,"type":0.07,"pop":0.16,"riser_end":0.13}
 fx=np.zeros(len(v)+SR)
 r.build("A")
 for t,k in r.SFX:
-    o=int(max(0,t-(0.15 if k.startswith("swoosh") else 0))*SR); s=lib[k]*gain[k]; fx[o:o+len(s)]+=s[:len(fx)-o]
+    off=len(lib[k])/SR if k=="riser_end" else (0.18 if k in ("swoosh","swoosh_s","whoosh") else 0)
+    o=int(max(0,t-off)*SR); s=lib[k]*gain[k]; fx[o:o+len(s)]+=s[:len(fx)-o]
 ww("sfx.wav",fx[:len(v)])
 print("ok",len(v)/SR, len(r.SFX))
