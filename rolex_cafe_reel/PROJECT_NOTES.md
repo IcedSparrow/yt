@@ -30,6 +30,19 @@ Hooki mają ten sam dźwięk co pierwsze 4 s wersji głównej i podmieniają si�
 - Runda 1: pełny render v1 + v2 SFX + 2 alternatywne hooki.
 - **Runda 2 (Twoja prośba: więcej animacji, bardziej dynamicznie)** — podmienione wszystkie 4 pliki. Poprzednia wersja silnika: brak (zastąpiona w \`src/\`).
 
+## Runda 3 — naprawa końcówki + lepsze wizualia
+**Zacięcie na końcu (naprawione u źródła):** surowe nagranie ma zmienną liczbę klatek (1657 klatek na 57,3 s ≈ 28,9 fps). Renderer zakładał stałe 30 fps, więc obraz powoli rozjeżdżał się z dźwiękiem, a na ostatnich ~2 s brakowało klatek i obraz stał. Teraz surówka jest przeliczana na stałe 30 fps według prawdziwych znaczników czasu (1718 klatek), a detekcja twarzy policzona od nowa. Sprawdzone: od 45 s do końca nie ma ani jednej zatrzymanej klatki, obraz 55,27 s / dźwięk 55,25 s. Przy okazji: usta są teraz zsynchronizowane w całym filmie (wcześniej dryf narastał do ~2 s).
+
+Nowe wizualia:
+1. Kinetyczna typografia: litery dużych słów wjeżdżają kaskadowo (każda +22 px → 0), całość gotowa przed wypowiedzeniem słowa.
+2. Przejścia „wipe” 0,3 s między różnymi układami: nowy kadr odsłania się od góry miękką krawędzią ze złotą linią światła.
+3. Złote i zielone światła bokeh w tle układów z oknem (4–7% krycia, powolny dryf).
+4. Okno z Tobą: złota ramka + znacznik „● ZEGARKIDAWIDA”.
+5. Karty: delikatny połysk u góry (głębia).
+6. Cena Rolexa: licznik 0 → 100 000 zł zamiast pisania.
+7. Karta „Obserwuj”: złota obwódka rysuje się wokół karty.
+8. Komentarz: po wysłaniu pojawia się serce i licznik „1 → 128 POLUBIEŃ”.
+
 ## Runda 2 — co doszło
 1. Napisy karaoke: każde słowo rozjaśnia się (42% → 100%) w momencie wypowiedzenia; styl i pozycja bez zmian.
 2. Złote podkreślenie rysuje się od środka pod każdym dużym słowem, po tym jak słowo się pojawi.

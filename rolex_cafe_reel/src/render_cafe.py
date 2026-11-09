@@ -84,7 +84,22 @@ def draw_window(cv, fi, t=0, t0=-1):
     sp = paint('#000000', 0.6); sp.setMaskFilter(skia.MaskFilter.MakeBlur(skia.kNormal_BlurStyle, 30))
     cv.drawRRect(skia.RRect.MakeRectXY(skia.Rect(x0 + 8, WIN['y0'] + 24, x0 + w - 8, WIN['y0'] + img.height() + 24), 34, 34), sp)
     cv.save(); cv.clipRRect(r, True); cv.drawImage(img, x0, WIN['y0']); cv.restore()
-    cv.drawRRect(r, paint('#FFFFFF', 0.14, stroke=2))
+    cv.drawRRect(r, paint(ACCENT, 0.38, stroke=2))
+    f = font('mono', 18); tag = 'ZEGARKIDAWIDA'; tw_ = tw(tag, f, 3)
+    tr = skia.RRect.MakeRectXY(skia.Rect(x0 + 22, WIN['y0'] + 22, x0 + 22 + tw_ + 52, WIN['y0'] + 62), 20, 20)
+    cv.drawRRect(tr, paint('#070504', 0.62))
+    cv.drawCircle(x0 + 44, WIN['y0'] + 42, 5, paint(ACCENT, 0.95))
+    text(cv, tag, x0 + 58, WIN['y0'] + 49, f, TEXT, 0.9, track=3)
+
+def bokeh(cv, t, a=1.0):
+    for i in range(12):
+        sx = (i * 397 % 1000) / 1000; sy = (i * 619 % 1000) / 1000
+        x = 60 + sx * 960 + math.sin(t * 0.35 + i) * 30
+        y = (sy * 2100 - t * (14 + i % 5 * 6)) % 2100 - 90
+        r = 26 + (i * 37 % 50)
+        p = paint(ACCENT if i % 3 else ACCENT2, (0.045 + 0.03 * ((i * 13) % 3)) * a)
+        p.setMaskFilter(skia.MaskFilter.MakeBlur(skia.kNormal_BlurStyle, r * 0.45))
+        cv.drawCircle(x, y, r, p)
 
 def circle_me(cv, fi, cx, cy, d, t, t0):
     k = ease((t - t0 - 0.30) / 0.30) if t0 >= 0 else 1.0
@@ -128,8 +143,17 @@ def top_word(cv, lines, t, t0, kw=None, lab=None, fi=0, size=118, accent=None):
         f_ = fs
         while tw(ln, font('big', f_), -2) > 960: f_ -= 3
         y += f_ * 0.95
-        text(cv, ln, 540, y + (1 - k) * 14, font('big', f_), ACCENT if accent == i else TEXT, k, align='center', track=-2, shadow=True)
-        lw = tw(ln, font('big', f_), -2)
+        fnt = font('big', f_); lw = tw(ln, fnt, -2); xx = 540 - lw / 2
+        col = ACCENT if accent == i else TEXT
+        nch = max(1, len(ln))
+        for ci, ch in enumerate(ln):
+            if d <= 0.02: kc = 1.0
+            else:
+                st = t0 + d * 0.55 * ci / nch
+                kc = ease((t - st) / (d * 0.45 + 1e-6))
+            if kc > 0 and ch != ' ':
+                text(cv, ch, xx, y + (1 - kc) * 22, fnt, col, kc, shadow=True)
+            xx += fnt.measureText(ch) - 2
     pu = P(t, t0 + max(d, 0.02) + 0.06, 0.38)
     if pu > 0 and y + 22 < limit:
         half = lw * 0.5 * pu
@@ -150,7 +174,11 @@ def card(cv, x0, y0, x1, y1, k=1.0, border=ACCENT, ba=0.35):
     r = skia.RRect.MakeRectXY(skia.Rect(x0, y0, x1, y1), 28, 28)
     sp = paint('#000000', 0.5 * k); sp.setMaskFilter(skia.MaskFilter.MakeBlur(skia.kNormal_BlurStyle, 22))
     cv.drawRRect(skia.RRect.MakeRectXY(skia.Rect(x0 + 6, y0 + 18, x1 - 6, y1 + 18), 28, 28), sp)
-    cv.drawRRect(r, paint(PANEL, 0.95 * k)); cv.drawRRect(r, paint(border, ba * k, stroke=2))
+    cv.drawRRect(r, paint(PANEL, 0.95 * k))
+    cv.save(); cv.clipRRect(r, True)
+    cv.drawRect(skia.Rect(x0, y0, x1, y0 + 90), skia.Paint(Shader=skia.GradientShader.MakeLinear([(0, y0), (0, y0 + 90)], [C('#FFFFFF', 0.06 * k).toColor(), C('#FFFFFF', 0).toColor()])))
+    cv.restore()
+    cv.drawRRect(r, paint(border, ba * k, stroke=2))
 
 def img_card(cv, name, t, t0, src_box, box=(110, 70, 970, 600), lab=None, lab_t=None, white=False):
     k, dy = entrance(t, t0)
@@ -317,13 +345,24 @@ def g_comment(cv, t, t0, o):
     cv.drawCircle(925, y0 + 75, 40, paint(ACCENT, (0.35 + 0.65 * (pr >= 1)) * k))
     ar = skia.Path(); ar.moveTo(908, y0 + 75); ar.lineTo(942, y0 + 75); ar.moveTo(928, y0 + 60); ar.lineTo(943, y0 + 75); ar.lineTo(928, y0 + 90)
     cv.drawPath(ar, paint('#070504', k, stroke=5))
+    # likes appear after the comment is sent
+    lk = P(t, o['tt'] + 0.95, 0.25) * k
+    if lk > 0:
+        hx, hy = 150, y0 + 230; sc = 0.85 + 0.15 * lk
+        hp = skia.Path(); hp.moveTo(hx, hy + 14 * sc)
+        hp.cubicTo(hx - 34 * sc, hy - 8 * sc, hx - 16 * sc, hy - 30 * sc, hx, hy - 14 * sc)
+        hp.cubicTo(hx + 16 * sc, hy - 30 * sc, hx + 34 * sc, hy - 8 * sc, hx, hy + 14 * sc)
+        cv.drawPath(hp, paint('#E0565B', lk))
+        n = int(1 + 127 * eout((t - o['tt'] - 1.0) / 0.7)) if t > o['tt'] + 1.0 else 1
+        label(cv, f'{n} POLUBIEŃ', hx + 40, hy + 8, 1.0, MUTED, 22, a=lk)
 
 def follow_card(cv, t, t0, o):
     k = clamp((t - t0) / 0.12 + 0.35)
     y0 = 70; r = skia.RRect.MakeRectXY(skia.Rect(80, y0, 1000, y0 + 170), 85, 85)
     sp = paint('#000000', 0.5 * k); sp.setMaskFilter(skia.MaskFilter.MakeBlur(skia.kNormal_BlurStyle, 24))
     cv.drawRRect(skia.RRect.MakeRectXY(skia.Rect(90, y0 + 18, 990, y0 + 188), 85, 85), sp)
-    cv.drawRRect(r, paint(PANEL, 0.96 * k)); cv.drawRRect(r, paint('#FFFFFF', 0.16 * k, stroke=2))
+    cv.drawRRect(r, paint(PANEL, 0.96 * k)); cv.drawRRect(r, paint('#FFFFFF', 0.12 * k, stroke=2))
+    bp = skia.Path(); bp.addRRect(r); trim_stroke(cv, bp, P(t, t0 + 0.1, 0.9), ACCENT, 3, k)
     cv.drawCircle(165, y0 + 85, 55, paint('#2A1F18', k)); cv.drawCircle(165, y0 + 85, 55, paint(ACCENT, k, stroke=3))
     text(cv, 'ZD', 165, y0 + 100, font('big', 42), ACCENT, k, align='center')
     text(cv, '@zegarkidawida', 240, y0 + 101, font('cap', 44), TEXT, k)
@@ -364,10 +403,10 @@ def asset_full(cv, name, t, t0, src_box, top=0, bottom=1400, fade_from=1120):
     cv.drawRect(skia.Rect(0, fade_from, W, bottom + 2), skia.Paint(Shader=skia.GradientShader.MakeLinear([(0, fade_from), (0, bottom)], [C('#0B0806', 0).toColor(), C('#0B0806', 1).toColor()])))
     return m, k
 
-def render(t, cv, hv=None):
+def render(t, cv, hv=None, force=None):
     raw = raw_of(t); fi = min(NRAW - 1, int(round(raw * FPS)))
     cv.drawImage(BG, 0, 0)
-    b = beat_at(t); L = b['layout']; t0 = b['t0']
+    b = force or beat_at(t); L = b['layout']; t0 = b['t0']
     if hv and L == 'hook': L = hv
     if L == 'hook':
         m, k = asset_full(cv, 'sub_coffee.jpg', t, -1, (0, 250, 1512, 1594), top=440)
@@ -393,9 +432,15 @@ def render(t, cv, hv=None):
             cx, cy = m[0](*b['ring'][:2]); rr = b['ring'][2] * m[1]
             pth = skia.Path(); pth.addCircle(cx, cy, rr)
             trim_stroke(cv, pth, P(t, O(b['ring_t']), 0.55), ACCENT, 6)
-        if b.get('pill'): pill(cv, b['pill'], b.get('pill_x', 540), b.get('pill_y', 1290), P(t, O(b['pill_t']), 0.5), ACCENT, 28)
+        if b.get('count'):
+            pc = P(t, O(b['pill_t']), 0.25)
+            if pc > 0:
+                n = int(round(100000 * eout((t - O(b['pill_t'])) / 0.8) / 1000)) * 1000
+                pill(cv, f"ROLEX  ≈ {n:,} zł".replace(',', ' '), b.get('pill_x', 540), b.get('pill_y', 1290), 1.0, ACCENT, 28, a=pc)
+        elif b.get('pill'): pill(cv, b['pill'], b.get('pill_x', 540), b.get('pill_y', 1290), P(t, O(b['pill_t']), 0.5), ACCENT, 28)
         circle_me(cv, fi, b.get('cx', 180), b.get('cy', 1180), 250, t, t0)
     else:
+        bokeh(cv, t)
         draw_window(cv, fi)
         if L == 'card':
             m, k = img_card(cv, b['img'], t, t0, tuple(b['box']), tuple(b.get('cbox', (110, 70, 970, 600))), b.get('lab'),
@@ -416,11 +461,30 @@ def render(t, cv, hv=None):
         elif L == 'comment': g_comment(cv, t, t0, dict(tt=O(b['tt'])))
     caption(cv, t)
 
+TR = 0.30
+_ramp = None
+def _snap(t, hv, force=None):
+    s = skia.Surface(W, H); cv = s.getCanvas(); render(t, cv, hv, force)
+    return s.makeImageSnapshot().toarray()
 def frame_rgba(t, hv=None):
     global BG
     if BG is None: BG = make_bg()
-    s = skia.Surface(W, H); cv = s.getCanvas(); render(t, cv, hv)
-    a = s.makeImageSnapshot().toarray(); return np.ascontiguousarray(a[..., [2, 1, 0, 3]])
+    b = beat_at(t); i = BEATS.index(b)
+    a = _snap(t, hv)
+    if i > 0 and b['layout'] != 'hook' and t - b['t0'] < TR and BEATS[i - 1]['layout'] != b['layout'] and not (hv and i - 1 == 0):
+        prev = _snap(t, hv, BEATS[i - 1]).astype(np.float32)
+        p = ease((t - b['t0']) / TR)
+        front = -140 + p * (H + 280)
+        y = np.arange(H, dtype=np.float32)
+        m = np.clip((front - y) / 140.0, 0, 1)[:, None, None]
+        out = prev * (1 - m) + a.astype(np.float32) * m
+        # thin gold light at the wipe front
+        ly = int(front - 70)
+        if 0 <= ly < H - 3:
+            gold = np.array([108, 179, 217, 255], np.float32)  # BGRA of ACCENT
+            out[ly:ly + 3] = out[ly:ly + 3] * 0.35 + gold * 0.65
+        a = np.clip(out, 0, 255).astype(np.uint8)
+    return np.ascontiguousarray(a[..., [2, 1, 0, 3]])
 
 if __name__ == '__main__':
     mode = sys.argv[1]
