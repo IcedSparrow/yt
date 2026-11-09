@@ -30,7 +30,8 @@ for b in B:
     t0=O(b['raw']); L=b['layout']
     if L=='hook': continue
     ev.append((t0,'tick' if L=='full' and not b.get('follow') else 'swoosh'))
-    if L=='doc': ev+=[(O(b['tm']),'tick'),(O(b['tc']),'tick')]
+    if L=='doc': ev+=[(O(b['ts']),'click'),(O(b['tm']),'tick'),(O(b['tc']),'tick')]
+    if L=='pin': ev+=[(O(b['tp'])+0.4,'click'),(O(b['tn']),'tick')]
     if L=='brands': ev+=[(O(x),'tick') for x in b['tt']]
     if L=='funnel': ev+=[(O(b['t2']),'tick'),(O(b['t3']),'tick')]
     if b.get('ring_t'): ev.append((O(b['ring_t']),'tick'))

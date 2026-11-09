@@ -136,9 +136,13 @@ def caption(cv, t):
         size -= 2
     x = 500 - total / 2
     kwset = [k.lower() for k in kws]
+    t_s, t_e = O(CAPS[i][1]), O(CAPS[i][2])
+    tot = sum(len(w) for w in words); acc_ = 0
     for w in words:
-        bare = w.strip(',.!?—:;').lower()
+        wst = t_s + (t_e - t_s) * acc_ / max(1, tot); acc_ += len(w)
+        lit = 0.42 + 0.58 * clamp((t - wst + 0.04) / 0.10)
+        bare = w.strip(',.!?—:;„”').lower()
         col = ACCENT if any(bare == k or (k in bare and len(k) > 3) for k in kwset) else TEXT
-        text(cv, w, x, CAP_Y, f, col, 1.0, shadow=True)
+        text(cv, w, x, CAP_Y, f, col, lit, shadow=True)
         x += f.measureText(w) + space
 

@@ -111,8 +111,8 @@ def make_bg():
     return s.makeImageSnapshot()
 BG = None
 
-def entrance(t, t0, d=0.30):
-    k = ease((t - t0) / d); return k, (1 - k) * 26
+def entrance(t, t0, d=0.34):
+    k = ease((t - t0) / d); return k, (1 - k) * 48
 
 def top_word(cv, lines, t, t0, kw=None, lab=None, fi=0, size=118, accent=None):
     """big word above the head in FULL; sized to the highest hair point of this beat."""
@@ -129,6 +129,11 @@ def top_word(cv, lines, t, t0, kw=None, lab=None, fi=0, size=118, accent=None):
         while tw(ln, font('big', f_), -2) > 960: f_ -= 3
         y += f_ * 0.95
         text(cv, ln, 540, y + (1 - k) * 14, font('big', f_), ACCENT if accent == i else TEXT, k, align='center', track=-2, shadow=True)
+        lw = tw(ln, font('big', f_), -2)
+    pu = P(t, t0 + max(d, 0.02) + 0.06, 0.38)
+    if pu > 0 and y + 22 < limit:
+        half = lw * 0.5 * pu
+        cv.drawRect(skia.Rect(540 - half, y + 16, 540 + half, y + 20), paint(ACCENT, 0.95))
 
 _hair_cache = {}
 def BEAT_HAIR(t0):
@@ -154,7 +159,8 @@ def img_card(cv, name, t, t0, src_box, box=(110, 70, 970, 600), lab=None, lab_t=
     sp = paint('#000000', 0.55 * k); sp.setMaskFilter(skia.MaskFilter.MakeBlur(skia.kNormal_BlurStyle, 28))
     cv.drawRRect(skia.RRect.MakeRectXY(skia.Rect(x0 + 6, y0 + 24, x1 - 6, y1 + 24), 34, 34), sp)
     cv.save(); cv.clipRRect(r, True)
-    m = draw_cover(cv, name, (x0, y0, x1, y1), alpha=k, src_box=src_box)
+    kb = 1 + 0.05 * clamp((t - t0) / 3.5)
+    m = draw_cover(cv, name, (x0, y0, x1, y1), alpha=k, src_box=src_box, zoom=kb, zfocus=((src_box[0] + src_box[2]) / 2, (src_box[1] + src_box[3]) / 2), zfull=2.0)
     if lab:
         g = skia.Paint(Shader=skia.GradientShader.MakeLinear([(0, y1 - 170), (0, y1)], [C('#000000', 0).toColor(), C('#070504', 0.8 * k).toColor()]))
         cv.drawRect(skia.Rect(x0, y1 - 170, x1, y1), g)
@@ -183,6 +189,67 @@ def g_doc(cv, t, t0, o):
     text(cv, 'usługi kawiarniane', x0 + 340, ry + 52, font('big', 44), TEXT, k)
     pth = skia.Path(); pth.addRRect(skia.RRect.MakeRectXY(skia.Rect(x0 + 24, ry, x1 - 24, ry + 84), 20, 20))
     trim_stroke(cv, pth, P(t, o['tc'], 0.6), ACCENT2, 4, k)
+    stamp(cv, x1 - 150, y0 + 255, t, o['ts'])
+
+def steam(cv, cx, y_bot, y_top, t, a=1.0):
+    for j, dx in enumerate((-34, 0, 34)):
+        pth = skia.Path(); first = True
+        for i in range(0, 41):
+            u = i / 40; yy = y_bot - (y_bot - y_top) * u
+            xx = cx + dx + math.sin(u * 5.0 - t * 2.2 + j * 1.7) * (6 + 10 * u)
+            if first: pth.moveTo(xx, yy); first = False
+            else: pth.lineTo(xx, yy)
+        p = paint('#FFFFFF', 1.0, stroke=3)
+        p.setShader(skia.GradientShader.MakeLinear([(0, y_bot), (0, y_top)], [C('#FFFFFF', 0.0).toColor(), C('#FFFFFF', 0.55 * a).toColor(), C('#FFFFFF', 0).toColor()], [0, 0.35, 1]))
+        cv.drawPath(pth, p)
+
+def stamp(cv, cx, cy, t, t1, s='ZŁOŻONO · USPTO'):
+    pr = P(t, t1, 0.4)
+    if pr <= 0: return
+    f = font('mono', 20); w = tw(s, f, 4) + 44
+    cv.save(); cv.translate(cx, cy); cv.rotate(-7)
+    r = skia.Path(); r.addRRect(skia.RRect.MakeRectXY(skia.Rect(-w / 2, -28, w / 2, 28), 10, 10))
+    trim_stroke(cv, r, pr, ACCENT2, 4)
+    label(cv, s, -w / 2 + 22, 8, 1.0, ACCENT2, 20, a=P(t, t1 + 0.35, 0.25), track=4)
+    cv.restore()
+
+def watch_icon(cv, cx, cy, pr, col):
+    if pr <= 0: return
+    pth = skia.Path(); pth.addCircle(cx, cy, 26)
+    pth.moveTo(cx - 14, cy - 24); pth.lineTo(cx - 12, cy - 42); pth.lineTo(cx + 12, cy - 42); pth.lineTo(cx + 14, cy - 24)
+    pth.moveTo(cx - 14, cy + 24); pth.lineTo(cx - 12, cy + 42); pth.lineTo(cx + 12, cy + 42); pth.lineTo(cx + 14, cy + 24)
+    pth.moveTo(cx, cy); pth.lineTo(cx, cy - 15); pth.moveTo(cx, cy); pth.lineTo(cx + 11, cy + 5)
+    trim_stroke(cv, pth, pr, col, 3)
+
+def g_pin(cv, t, t0, o):
+    k, dy = entrance(t, t0)
+    x0, y0, x1, y1 = 100, 60 + dy, 980, 600 + dy
+    card(cv, x0, y0, x1, y1, k)
+    # dotted map texture
+    for gx in range(x0 + 40, x1 - 20, 34):
+        for gy in range(int(y0) + 40, int(y1) - 20, 34):
+            cv.drawCircle(gx, gy, 1.6, paint('#FFFFFF', 0.10 * k))
+    # stylised lake (crescent) drawing itself
+    lk = skia.Path(); cx, cy = 430, y0 + 330
+    lk.moveTo(cx - 230, cy - 30); lk.cubicTo(cx - 150, cy + 150, cx + 140, cy + 130, cx + 240, cy - 90)
+    lk.cubicTo(cx + 230, cy - 20, cx + 120, cy + 10, cx + 40, cy + 30)
+    lk.cubicTo(cx - 60, cy + 50, cx - 170, cy + 10, cx - 230, cy - 30); lk.close()
+    cv.drawPath(lk, paint(ACCENT2, 0.16 * k * P(t, t0 + 0.6, 0.3)))
+    trim_stroke(cv, lk, P(t, t0 + 0.15, 0.6), ACCENT2, 3, k)
+    label(cv, 'JEZIORO GENEWSKIE', cx - 120, cy + 105, P(t, t0 + 0.6, 0.5), MUTED, 18, a=k)
+    # pin drop (eased, no bounce) + ripple
+    px, py = cx - 170, cy - 30
+    pd = P(t, o['tp'], 0.45)
+    if pd > 0:
+        yy = py - 120 * (1 - pd)
+        rp = clamp((t - o['tp'] - 0.45) / 0.7)
+        if 0 < rp < 1: cv.drawCircle(px, py, 10 + 46 * eout(rp), paint(ACCENT, 0.6 * (1 - rp), stroke=2))
+        pin = skia.Path(); pin.moveTo(px, yy); pin.cubicTo(px - 30, yy - 40, px - 26, yy - 74, px, yy - 76); pin.cubicTo(px + 26, yy - 74, px + 30, yy - 40, px, yy)
+        cv.drawPath(pin, paint(ACCENT, pd)); cv.drawCircle(px, yy - 50, 10, paint(PANEL, pd))
+    text(cv, 'GENEWA', 640, y0 + 160, font('big', 72), TEXT, P(t, o['tp'] + 0.5, 0.3), track=-1)
+    label(cv, 'SZWAJCARIA', 644, y0 + 205, 1.0, MUTED, 22, a=P(t, o['tp'] + 0.5, 0.3))
+    label(cv, 'F.P. JOURNE', 644, y0 + 300, P(t, o['tn'], 0.4), ACCENT, 34)
+    label(cv, 'ZEGARMISTRZ · RESTAURACJA', 644, y0 + 345, P(t, o['tn'] + 0.4, 0.5), MUTED, 20)
 
 def g_brands(cv, t, t0, o):
     k, _ = entrance(t, t0, 0.2)
@@ -192,7 +259,7 @@ def g_brands(cv, t, t0, o):
         kk = P(t, o['tt'][i], 0.35) * k
         x0 = 90; y0 = 140 + i * 162
         ph = skia.RRect.MakeRectXY(skia.Rect(x0, y0, 990, y0 + 145), 28, 28)
-        if kk < 1: cv.drawRRect(ph, paint('#FFFFFF', 0.10 * k * (1 - kk), stroke=2))
+        if kk < 1: cv.drawRRect(ph, paint(ACCENT, 0.22 * k * (1 - kk), stroke=2))
         if kk <= 0: continue
         y0 += (1 - kk) * 30
         card(cv, x0, y0, 990, y0 + 145, kk, ACCENT, 0.3)
@@ -213,6 +280,7 @@ def g_funnel(cv, t, t0, o):
         if i == 2: cv.drawCircle(X, ys[i], 9, paint(ACCENT2, kk))
         text(cv, nm, X + 60, ys[i] + 18, font('big', 64), TEXT if i < 2 else ACCENT2, kk, track=-1)
         label(cv, sub.upper(), X + 64, ys[i] + 62, 1.0, MUTED, 22, a=kk)
+        if i == 2: watch_icon(cv, X + 60 + tw(nm, font('big', 64), -1) + 70, ys[i], P(t, tt + 0.4, 0.6), ACCENT2)
 
 def g_wait(cv, t, t0, o):
     k, dy = entrance(t, t0)
@@ -222,6 +290,13 @@ def g_wait(cv, t, t0, o):
     label(cv, 'TWOJA POZYCJA NA LIŚCIE OCZEKUJĄCYCH', x0 + 44, y0 + 150, 1.0, ACCENT, 24, a=k)
     n = int(1 + 1247 * eout((t - o['tc']) / 1.1))
     text(cv, f"#{n:,}".replace(',', ' '), x0 + 40, y0 + 290, font('big', 150), TEXT, k, track=-3, shadow=True)
+    pb = P(t, o['tc'] + 1.2, 0.4) * k
+    if pb > 0:
+        bx0, by = x0 + 44, y0 + 380; bw = (x1 - 44) - bx0
+        cv.drawRRect(skia.RRect.MakeRectXY(skia.Rect(bx0, by, bx0 + bw, by + 14), 7, 7), paint('#FFFFFF', 0.08 * pb))
+        fill = 0.02 + 0.03 * clamp((t - o['tc'] - 1.2) / 3)
+        cv.drawRRect(skia.RRect.MakeRectXY(skia.Rect(bx0, by, bx0 + bw * fill, by + 14), 7, 7), paint(ACCENT, pb))
+        label(cv, 'SZACOWANY CZAS OCZEKIWANIA: ???', bx0, by + 58, P(t, o['tc'] + 1.4, 0.7), MUTED, 22, a=k)
     a = P(t, o['ts'], 0.3)
     label(cv, 'JAK W SALONIE ROLEXA', x0 + 44, y1 - 56, a, ACCENT2, 26, a=k)
 
@@ -282,7 +357,8 @@ def punch_val(t, kw):
 
 def asset_full(cv, name, t, t0, src_box, top=0, bottom=1400, fade_from=1120):
     k, _ = entrance(t, t0) if t0 >= 0 else (1.0, 0)
-    m = draw_cover(cv, name, (0, top, W, bottom), alpha=k, src_box=src_box)
+    kb = 1 + 0.045 * clamp((t - max(t0, 0)) / 3.5)
+    m = draw_cover(cv, name, (0, top, W, bottom), alpha=k, src_box=src_box, zoom=kb, zfocus=((src_box[0] + src_box[2]) / 2, (src_box[1] + src_box[3]) / 2), zfull=2.0)
     if top > 0:
         cv.drawRect(skia.Rect(0, top - 1, W, top + 170), skia.Paint(Shader=skia.GradientShader.MakeLinear([(0, top - 1), (0, top + 170)], [C(BG_TOP, 1).toColor(), C(BG_TOP, 0).toColor()])))
     cv.drawRect(skia.Rect(0, fade_from, W, bottom + 2), skia.Paint(Shader=skia.GradientShader.MakeLinear([(0, fade_from), (0, bottom)], [C('#0B0806', 0).toColor(), C('#0B0806', 1).toColor()])))
@@ -328,9 +404,12 @@ def render(t, cv, hv=None):
                 cx, cy = m[0](*b['ring'][:2]); rr = b['ring'][2] * m[1]
                 pth = skia.Path(); pth.addCircle(cx, cy, rr)
                 trim_stroke(cv, pth, P(t, O(b['ring_t']), 0.5), ACCENT, 5)
+            if b.get('steam'):
+                sx, sy = m[0](*b['steam']); steam(cv, sx, sy, sy - 120, t, P(t, t0 + 0.4, 0.5))
             if b.get('under'):
                 label(cv, b['under'], 540, b['cbox'][3] + 70, P(t, t0 + 0.35, 0.6), MUTED, 24, align='center', a=k)
-        elif L == 'doc': g_doc(cv, t, t0, dict(td=O(b['td']), tr=O(b['tr']), tm=O(b['tm']), tc=O(b['tc'])))
+        elif L == 'doc': g_doc(cv, t, t0, dict(td=O(b['td']), tr=O(b['tr']), tm=O(b['tm']), tc=O(b['tc']), ts=O(b['ts'])))
+        elif L == 'pin': g_pin(cv, t, t0, dict(tp=O(b['tp']), tn=O(b['tn'])))
         elif L == 'brands': g_brands(cv, t, t0, dict(tt=[O(x) for x in b['tt']]))
         elif L == 'funnel': g_funnel(cv, t, t0, dict(t1=O(b['t1']), t2=O(b['t2']), t3=O(b['t3'])))
         elif L == 'wait': g_wait(cv, t, t0, dict(tc=O(b['tc']), ts=O(b['ts'])))
