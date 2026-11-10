@@ -38,9 +38,61 @@ Hooki mają ten sam dźwięk co pierwsze 4 s wersji głównej — podmieniasz 1:
 6. Bez muzyki. Zdjęcie na mankiecie (wrist_cuff) niewykorzystane — dubluje hook.
 
 ## Cue sheet
+| Wyjście | Układ | Na ekranie | Animacja | Napisy |
+|---|---|---|---|---|
+| 0:00.00–0:01.50 | Zdjęcie na pełny ekran + Ty w kółku | Air-King z logo na ręce, „Rolex z logo pizzerii?” | statyczny pierwszy kadr, złoty pierścień rysuje się wokół logo | Rolex z logo pizzerii? |
+| 0:01.50–0:03.28 | Ty na pełnym kadrze + duże słowo nad głową | „PODRÓBKA? ŻART?” / TO NIE JEST | litery wjeżdżają kaskadowo, czerwone przekreślenie | To nie jest podróbka / ani żart. |
+| 0:03.28–0:05.06 | Karta u góry + Ty w oknie | metka „CENA — zł” | metka rysuje się, czerwona pieczątka „NIE NA SPRZEDAŻ” na „kupić” | Tego zegarka / nie dało się kupić. |
+| 0:05.06–0:08.32 | Ty na pełnym kadrze + duże słowo nad głową | „ZAPRACUJ NA NIEGO” / SPRZEDAJĄC PIZZĘ | litery wjeżdżają kaskadowo, złote podkreślenie, punch-in 6% | Trzeba było na niego / zapracować, / sprzedając pizzę. |
+| 0:08.32–0:13.78 | Karta u góry + Ty w oknie | oś czasu BULOVA → SEIKO → AIR-KING → OYSTER PERPETUAL + Tom Monaghan | węzły zapalają się na nazwę zegarka | Lata 70. / Tom Monaghan, / współzałożyciel Domino's, / nosił na ręce / Bulovę z logo / swojej firmy. |
+| 0:13.78–0:18.89 | Karta u góry + Ty w oknie | czat: franczyzobiorca → Tom Monaghan | kropki pisania, pytanie pisze się samo, potem „Tom pisze…” | Pewnego dnia / jeden z franczyzobiorców / pyta go wprost: / „Co muszę zrobić, / żeby dostać / taki zegarek?” |
+| 0:18.89–0:19.86 | Ty na pełnym kadrze + duże słowo nad głową | „WYZWANIE” / TOM MONAGHAN | litery wjeżdżają kaskadowo, złote podkreślenie | Tom rzuca wyzwanie: |
+| 0:19.86–0:23.15 | Karta u góry + Ty w oknie | licznik $0 → $20 000 + 7 dni tygodnia | licznik rośnie na „20 tysięcy”, dni wypełniają się na „tygodnia” | sprzedaj pizzę / za 20 tysięcy dolarów / w ciągu jednego tygodnia. |
+| 0:23.15–0:25.01 | Ty na pełnym kadrze + duże słowo nad głową | „OGROMNA KWOTA” / W TAMTYCH CZASACH | litery wjeżdżają kaskadowo, złote podkreślenie | W tamtych czasach / to była ogromna kwota. |
+| 0:25.01–0:27.81 | Karta u góry + Ty w oknie | $20 000 (lata 70.) → $100 000+ (dziś) | strzałka rysuje się, licznik rośnie na „100 tysiącom” | Dziś odpowiadałaby / ponad 100 tysiącom dolarów. |
+| 0:27.81–0:29.11 | Ty na pełnym kadrze + duże słowo nad głową | „DAŁ RADĘ” / FRANCZYZOBIORCA | litery wjeżdżają kaskadowo, złote podkreślenie | Franczyzobiorca dał radę. |
+| 0:29.11–0:33.50 | Karta u góry + Ty w oknie | oś czasu BULOVA → SEIKO → AIR-KING → OYSTER PERPETUAL + „Seiko z logo Domino's” + kolejka | węzły zapalają się na nazwę zegarka, ludziki w kolejce pojawiają się po kolei | Dostał Seiko / z logo Domino's, / a za nim w kolejce / ustawili się następni. |
+| 0:33.50–0:35.73 | Ty na pełnym kadrze + duże słowo nad głową | „STAWKA W GÓRĘ” / LATA 80. | litery wjeżdżają kaskadowo, złote podkreślenie | W latach 80. / stawka poszła w górę. |
+| 0:35.73–0:39.23 | Zdjęcie/wideo na pełny ekran + Ty w kółku | Air-King z logo na zielonej podkładce | etykiety na słowo: SEIKO  →  ROLEX AIR-KING, →  OYSTER PERPETUAL + pierścień wokół logo | Seiko zastąpił / Rolexem Air-Kingiem, / a później / Oyster Perpetual. |
+| 0:39.23–0:42.23 | Ty na pełnym kadrze + duże słowo nad głową | „SYMBOL STATUSU” | litery wjeżdżają kaskadowo, złote podkreślenie, punch-in 6% | Zegarek z pizzerii / stał się symbolem / statusu w całej sieci. |
+| 0:42.23–0:45.08 | Pływająca karta u góry + Ty w oknie | porównanie tarcz: czerwono-niebieskie logo | pierścień rysuje się wokół logo, etykieta pod kartą | Pierwsze egzemplarze / miały czerwono-niebieskie / logo na tarczy. |
+| 0:45.08–0:47.02 | Pływająca karta u góry + Ty w oknie | porównanie tarcz: wersja monochromatyczna | pierścień rysuje się wokół logo, etykieta pod kartą | Najrzadsza jest / wersja monochromatyczna. |
+| 0:47.02–0:50.15 | Zdjęcie/wideo na pełny ekran + Ty w kółku | wideo: nowy model z czystą tarczą na ręce | etykiety na słowo: CZYSTA TARCZA, GRAWEROWANY DEKIEL | Nowsze modele, / takie jak ten, / mają czystą tarczę, / grawerowany dekiel |
+| 0:50.15–0:53.07 | Zdjęcie/wideo na pełny ekran + Ty w kółku | wideo: logo Domino's na zapięciu bransolety | etykiety na słowo: LOGO DOMINO'S NA BRANSOLECIE | i logo Domino's / na bransolecie Oyster. |
+| 0:53.07–0:55.05 | Ty na pełnym kadrze + duże słowo nad głową | „NAJDZIWNIEJSZY ROLEX” / JEDEN Z | litery wjeżdżają kaskadowo, złote podkreślenie, punch-in 6% | To jeden z / najdziwniejszych Rolexów świata. |
+| 0:55.05–0:56.09 | Ty na pełnym kadrze + duże słowo nad głową | „W SALONIE” / NIE KUPISZ GO | litery wjeżdżają kaskadowo, czerwone przekreślenie | Nie kupisz go w salonie. |
+| 0:56.09–0:59.15 | Karta u góry + Ty w oknie | siatka 27 kawałków pizzy + „TYSIĄCE PIZZ” | kawałki pojawiają się po kolei | Kiedyś trzeba było / na niego zarobić, / sprzedając tysiące pizz. |
+| 0:59.15–1:00.71 | Karta u góry + Ty w oknie | „Co sądzisz?” + pole komentarza | pole pisze się samo, serce i licznik polubień | Co o tym sądzisz? / Napisz w komentarzu |
+| 1:00.71–1:02.90 | Ty na pełnym kadrze + duże słowo nad głową | karta @zegarkidawida + „Obserwuj” | złota obwódka, tap → „Obserwujesz”, niski hit w wersji SFX | i obserwuj / po więcej! |
 
 
 ## Lista cięć
+| # | Surowy IN | Surowy OUT | Wideo IN | Wideo OUT | Słowa |
+|---|---|---|---|---|---|
+| 1 | 0.00 | 5.06 | 0.00 | 5.06 | Piolek z logo pizzerii. To nie jest podróbka ani żart. Tego zegarka nie dało się kupić. |
+| 2 | 5.26 | 6.91 | 5.06 | 6.71 | Trzeba było na niego zapracować, |
+| 3 | 7.19 | 8.80 | 6.71 | 8.32 | pizzę. |
+| 4 | 8.95 | 10.82 | 8.32 | 10.19 | Tata 70. Tom Monaghana. |
+| 5 | 10.89 | 12.03 | 10.19 | 11.33 | Spółzałżyciel Domino. |
+| 6 | 12.11 | 14.56 | 11.33 | 13.78 | Nosił na ręce bulowe z logo swojej firmy. |
+| 7 | 14.65 | 17.12 | 13.78 | 16.25 | Pewnego dnia jeden z franczyzobiorców pyta go wprost. |
+| 8 | 17.34 | 19.00 | 16.25 | 17.91 | Co muszę zrobić, żeby dostać taki zegarek? |
+| 9 | 19.11 | 20.09 | 17.91 | 18.89 |  |
+| 10 | 20.33 | 23.40 | 18.89 | 21.96 | Tom rzuca wyzwanie. Sprzedaj pizzę za 20 tysięcy dolarów w |
+| 11 | 23.65 | 26.80 | 21.96 | 25.11 | ciągu jednego tygodnia. W tamtych czasach to była ogromna kwota. Dziś |
+| 12 | 26.92 | 34.27 | 25.11 | 32.46 | odpowiadałaby ponad 100 tysiącom dolarów. Franczyzobiorca dał radę. Dostał Seiko z logo Domino, a zanim wykolejcy ustaliły lisie, |
+| 13 | 34.38 | 35.42 | 32.46 | 33.50 | następni. |
+| 14 | 35.49 | 43.50 | 33.50 | 41.51 | W latach 80. stapka poszła w górę. Seiko zastąpił Rolexem Air -Kingiem, a później Oyster Perpetual. Zegarek z pizzerią stał się symbolem statusu w |
+| 15 | 43.78 | 47.35 | 41.51 | 45.08 | całej sieci. Pierwsze egzemplarze miały czerwono niebieskie logo na tarczy. |
+| 16 | 47.52 | 50.15 | 45.08 | 47.71 | Najżawcza jest wersja monochromatyczna. Nowsze modele, |
+| 17 | 50.28 | 54.72 | 47.71 | 52.15 | takie jak ten mają czystą tarczy, grawerowany dekiel i logo Domino na branzolecie. Oyster! |
+| 18 | 54.83 | 55.77 | 52.15 | 53.09 |  |
+| 19 | 55.90 | 58.90 | 53.09 | 56.09 | jeden z najdziwniejszych Rolexów świata. Nie kupisz go w salonie. |
+| 20 | 59.02 | 60.74 | 56.09 | 57.81 | Kiedyś trzeba było na niego zarobić. |
+| 21 | 60.93 | 62.27 | 57.81 | 59.15 | tysiące piz. |
+| 22 | 62.56 | 64.17 | 59.15 | 60.76 | Co o tym sądnić? Napisz w komentarzu i |
+| 23 | 64.24 | 65.32 | 60.76 | 61.84 | obserwuj. |
+| 24 | 65.46 | 66.52 | 61.84 | 62.90 | Powięcej! |
 
 
 ## Co poprawiłem w przeglądach
