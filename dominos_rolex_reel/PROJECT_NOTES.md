@@ -27,7 +27,23 @@ Hooki mają ten sam dźwięk co pierwsze 4 s wersji głównej — podmieniasz 1:
 - Audio: highpass 70 Hz + loudnorm 2-pass (−14 LUFS); SFX miksowane w numpy, sprawdzone co 2 s — głos nigdzie nie odbiega o >2 dB.
 
 ## Status
-- Runda 1: pełny render v1 + v2 SFX + 2 hooki — czeka na Twoją akceptację.
+- Runda 1: spokojna wersja (pliki w głównym folderze) — zostaje jako alternatywa.
+- **Runda 2: wersja w stylu MrBeasta** — folder \`mrbeast/\` (v1, v2 SFX, 2 hooki). Silnik: \`src/render_beast.py\`, \`src/audio_beast.py\`.
+
+## Runda 2 — styl MrBeast (co doszło)
+Świadomie łamie część Twoich pierwotnych zasad („bez bounce”, „jedna rzecz naraz”), bo poprosiłeś o styl MrBeasta. Twarz, kadr, pozycja napisów i brak filtrów — bez zmian.
+1. Napisy: Inter Display Bold 66 px, biało-czarny gruby obrys, słowa-klucze żółte #FFD23F, każda linia wyskakuje (pop 0,14 s).
+2. Duże słowa nad głową: pop ze sprężystym „back-out”, czarny obrys, żółte podkreślenie; przekreślenia grubsze (czerwień + czarny kontur).
+3. Jump-zoom: na pełnym kadrze co linię napisów przeskok 100% ↔ 108% (zakotwiczony na twarzy, głowa nigdy nie jest ucinana — limit dużych słów liczony z uwzględnieniem zoomu).
+4. 14 momentów „impact”: wstrząs kadru 0,3 s + biały błysk 0,1 s (przekreślenia, pieczątka, $20 000, $100 000+, „wyzwanie”, „ogromna kwota”, „dał radę”, „symbol statusu”, „najdziwniejszy”, „w salonie”, „tysiące pizz”, tap „Obserwuj”).
+5. 19 emoji wyskakujących na słowo (❌ 🚫 💪 🍕 ⌚ 🤔 🔥 💰 😱 📈 ✅ 🎁 🚀 👑 💎 🤯 💬 🔔) — po bokach, nigdy na twarzy ani na logo.
+6. Czerwone strzałki MrBeast (czerwień + czarny kontur) do logo: hook, zielona podkładka, obie tarcze z porównania.
+7. Najazdy na szczegóły: hook (do logo, x1,32), zielona podkładka (x1,45), porównanie tarcz (x1,55 na logo).
+8. Przejścia: szybki whip 0,2 s z rozmyciem ruchu przy każdej zmianie ujęcia (napisy zostają ostre nad przejściem); między Twoimi pełnymi kadrami — jump-cut.
+9. Kółko z Tobą widoczne od pierwszej klatki każdego ujęcia (wcześniej wjeżdżało z opóźnieniem).
+10. SFX (v2, 166 efektów): whoosh przy przejściach, pop przy słowach/emoji/etykietach, swish przy strzałkach i przekreśleniach, boom przy wstrząsach, ding przy osi czasu, „ka-ching” przy licznikach dolarów, klikanie klawiatury przy czacie i komentarzu, klik + ding przy „Obserwuj”. Głos nienaruszony (sprawdzone co 2 s), całość −14 LUFS, szczyt −0,6 dBFS.
+
+Przegląd rundy 2: ciemna klatka między dwoma klipami wideo → whip przy każdej zmianie ujęcia; kółko z Tobą znikało na ~0,5 s po przejściu → widoczne od razu; napisy rozmywały się w przejściu → rysowane nad przejściem; sprawdzone: 0 zatrzymanych klatek, obraz = dźwięk = 62,9 s.
 
 ## Wybory podjęte bez pytania
 1. Od razu pełny render (bez czekania na OK beatów/stillsów), bo prosiłeś „wykonaj mi to”.
