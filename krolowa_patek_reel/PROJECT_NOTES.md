@@ -30,6 +30,18 @@ Hooki mają ten sam dźwięk co pierwsze 4 s wersji głównej — podmieniasz 1:
 - Runda 1: spokojna wersja (pliki w głównym folderze) — zostaje jako alternatywa.
 - **Runda 2: wersja w stylu MrBeasta + nowy hook** — folder `mrbeast/` (v1, v2 SFX, 3 hooki). Silnik: `src/render_qb.py`, `src/audio_qb.py`, beaty `src/beats_qb.json`.
 
+## Runda 3 — styl old money (folder `oldmoney/`)
+Poważna, luksusowa stylistyka: zero emoji, wstrząsów i skaczących napisów.
+- Paleta: butelkowa zieleń #10201A → #050B08, kość słoniowa #EFE8DA, matowe antyczne złoto #B89A5E, burgund #7A2E33.
+- Typografia: Cormorant Garamond (nagłówki, napisy; słowa-klucze kursywą w złocie), Cinzel (etykiety, rozstrzelone kapitaliki) — pobrane z rejestru npm (@expo-google-fonts, licencja OFL).
+- Ramki: podwójne cienkie złote linie jak na grawerowanym zaproszeniu (karty, okno z Tobą, medalion); ostre rogi zamiast zaokrągleń.
+- Duże słowa: zdania z kropką („Jeden zegarek.”, „Tak ważni?”, „Na sprzedaż?”, „Bezcenny.”) z numeracją rozdziałów I–IV i ornamentem (linia + romb).
+- Przejścia: powolne przenikanie 0,45 s; bez jump-zoomów; punch-in delikatny.
+- Wycena jak w katalogu domu aukcyjnego: „KATALOG · LOT I · Własność Jej Królewskiej Mości · ESTYMACJA £ — / nie do wycenienia”.
+- Hooki: A — pełnoekranowy portret młodej królowej, ramka rysuje się wokół kadru, medalion z zegarkiem, „Zegarek Królowej / stworzony wyłącznie dla Niej”; B — zegarek na czerni, „Bezcenny. / Nie da się go kupić.”; C — „Jedna Królowa. / Jeden zegarek.” dwa zdjęcia w ramkach.
+- SFX (v2): tylko subtelne ticki/swooshe −2 dB względem rundy 1.
+Sprawdzone: 0 zatrzymanych klatek, obraz 48,77 s = dźwięk 48,75 s, głos w v2 bez odchyleń > 2 dB.
+
 ## Runda 2 — styl MrBeast + nowy hook
 **Nowy hook (główny, wbudowany w film, 0–2,7 s):** miniaturowy układ „twarz + przedmiot + krótki tekst + strzałka”: dwa przechylone zdjęcia w białych ramkach (uśmiechnięta królowa w koronie | Patek 4975/1G), delikatnie się kołyszą; złote promienie światła w tle; iskry migoczące na diamentach lunety; od pierwszej klatki napis „ZROBIONY / TYLKO DLA NIEJ 👑” (biały + żółty, gruby obrys); czerwona strzałka do zegarka; na „niesamowita kobieta” żółta ramka na zdjęciu królowej + 😍 + wstrząs; pod spodem Ty w kółku + „PATEK PHILIPPE 4975/1G”.
 **Alternatywne hooki (4 s, podmiana 1:1):**
