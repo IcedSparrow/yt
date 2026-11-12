@@ -27,7 +27,20 @@ Hooki mają ten sam dźwięk co pierwsze 4 s wersji głównej — podmieniasz 1:
 - Audio: highpass 70 Hz + loudnorm 2-pass; v2 −14,8 LUFS, szczyt −1,5 dBFS, głos sprawdzony co 2 s (bez odchyleń > 2 dB).
 
 ## Status
-- Runda 1: pełny render v1 + v2 SFX + 2 hooki — czeka na Twoją akceptację.
+- Runda 1: spokojna wersja (pliki w głównym folderze) — zostaje jako alternatywa.
+- **Runda 2: wersja w stylu MrBeasta + nowy hook** — folder `mrbeast/` (v1, v2 SFX, 3 hooki). Silnik: `src/render_qb.py`, `src/audio_qb.py`, beaty `src/beats_qb.json`.
+
+## Runda 2 — styl MrBeast + nowy hook
+**Nowy hook (główny, wbudowany w film, 0–2,7 s):** miniaturowy układ „twarz + przedmiot + krótki tekst + strzałka”: dwa przechylone zdjęcia w białych ramkach (uśmiechnięta królowa w koronie | Patek 4975/1G), delikatnie się kołyszą; złote promienie światła w tle; iskry migoczące na diamentach lunety; od pierwszej klatki napis „ZROBIONY / TYLKO DLA NIEJ 👑” (biały + żółty, gruby obrys); czerwona strzałka do zegarka; na „niesamowita kobieta” żółta ramka na zdjęciu królowej + 😍 + wstrząs; pod spodem Ty w kółku + „PATEK PHILIPPE 4975/1G”.
+**Alternatywne hooki (4 s, podmiana 1:1):**
+- `hook_A_tylko_dla_niej.mp4` — powyższy (taki jak w filmie),
+- `hook_B_ile_jest_wart.mp4` — zegarek na czerni z iskrami, „ILE JEST WART?”, cyfry ceny kręcą się jak w automacie i na 1,35 s zatrzymują się czerwoną pieczątką „BEZCENNY”,
+- `hook_C_zegarek_dla_krolowej.mp4` — zdjęcie królowej w żółtej ramce, „ZEGAREK TYLKO DLA KRÓLOWEJ”, 👑 💎, Ty w oknie.
+
+**W całym filmie doszło:** napisy MrBeast (gruby obrys, żółte słowa-klucze, pop każdej linii); duże słowa wyskakują; jump-zoom co linię (zakotwiczony na czubku głowy — duże słowa mają pełne miejsce, usta nigdy nie wchodzą pod napisy); 11 wstrząsów z błyskiem (G w numerze, 400, gwiazd, tak ważni, „nigdy”, na sprzedaż, ???, wycenić, bezcenny, obserwuj); 21 emoji na słowo; czerwone strzałki (zegarek na ręce królowej, zegarek w kolażu); najazdy na szczegóły (zegarek królowej x1,55, perły x1,45); iskry na diamentach przy obu zdjęciach zegarka; szybkie przejścia whip z rozmyciem (napisy ostre); 146 efektów dźwiękowych (whoosh, pop, ding, „ka-ching” przy rekordzie, boom przy wstrząsach, klikanie przy liczeniu i losowaniu ceny).
+Świadomie łamie Twoje zasady „bez bounce” i „jedna rzecz naraz” — poprosiłeś o styl MrBeasta. Twarz, kadr, pozycja napisów i czysty obraz bez zmian.
+
+**Przegląd rundy 2:** hook C — napis zasłaniał twarz królowej → przeniesiony pod zdjęcie; hook B/C — złe przekazanie wariantu przy podglądzie → poprawione; duże słowa („JEDEN ZEGAREK”, „TAK WAŻNI?”) były malutkie, bo jump-zoom podnosił głowę → zoom zakotwiczony na czubku głowy, punch-in złagodzony do 3,5% (usta zawsze nad napisami); sprawdzone: 0 zatrzymanych klatek, obraz 48,77 s = dźwięk 48,75 s, v2 −14,4 LUFS, głos bez odchyleń > 2 dB.
 
 ## Wybory podjęte bez pytania
 1. Od razu pełny render (bez czekania na OK beatów/stillsów), bo prosiłeś „wykonaj mi to”.
